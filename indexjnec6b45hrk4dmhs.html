@@ -10,12 +10,13 @@ body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: center; /* 横方向の中央揃えは維持 */
+    
+    /* 縦方向の固定を解除し、最小高さを確保してスクロール可能にする */
+    min-height: 100vh; 
     margin: 0;
-    padding: 20px;
+    padding: 20px 0; /* 上下に余白を設定 */
     user-select: none;
-    touch-action: none; /* スマホでの誤スクロールやズームを防止 */
 }
 h1 {
     margin: 0 0 10px 0;
@@ -29,6 +30,7 @@ h1 {
     background: transparent; /* グレー領域の排除 */
     display: inline-block;   /* 中身にフィットさせる */
     line-height: 0;          /* 下側の隙間を消す */
+    touch-action: none; /* スマホ操作可能 */
 }
 canvas {
     display: block;
