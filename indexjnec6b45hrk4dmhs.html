@@ -2,10 +2,20 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>縄文登山（Ancient Climb）- スマホ対応版</title>
+<title>縄文登山 Ancient Climb</title>
 <style>
 body {
     background-color: #222;
+
+    /* 背景画像ここから */
+    background-image:
+        linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+        url('./img/gamebg.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    /* 背景画像ここまで */
+
     color: #fff;
     font-family: 'Helvetica Neue', Arial, sans-serif;
     display: flex;
@@ -18,10 +28,17 @@ body {
     padding: 20px 0; /* 上下に余白を設定 */
     user-select: none;
 }
-h1 {
+h1.logo {
     margin: 0 0 10px 0;
-    font-size: 24px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    line-height: 0; /* 画像の下の隙間を消す */
+    display: flex;        /* フレックスボックスを使用 */
+    justify-content: center; /* 横方向の中央寄せ */
+}
+
+h1.logo img {
+    max-width: 40%;   /* スマホの画面からはみ出さないようにする */
+    height: auto;      /* 比率を維持 */
+    display: block;    /* 余白を制御しやすくする */
 }
 #game-container {
     position: relative;
@@ -34,19 +51,40 @@ h1 {
 canvas {
     display: block;
 }
+
 #overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0);
     display: flex;
+    flex-direction: column; /* 画像と文字を縦並びにする */
     justify-content: center;
     align-items: center;
     font-size: 32px;
     font-weight: bold;
     color: white;
+	opacity: 0;                   /* 初期状態は透明 */
+    transition: opacity 0.8s ease; /* フェードイン・アウトにかかる時間 */
     pointer-events: none;
     transition: background 0.5s;
+    white-space: pre-line; /* 改行コードを反映させる */
+    text-align: center;     /* 文字のセンタリング */
+    padding: 20px;          /* 画面端との余白 */
+    box-sizing: border-box; /* paddingを幅に含める */
+    transition: background 0.5s, opacity 0.5s; /* opacityを追加してふわっと */
 }
+
+/* overlay 内の画像に対するスタイルを追加 */
+#overlay img {
+    max-width: 90%;         /* 横幅を画面に収める */
+    max-height: 60vh;       /* 画面高さの60%以内に収める（重要！） */
+    margin-top: 20px;       /* 文字との隙間 */
+    margin-bottom: 20px;    /* ボタンなどとの隙間 */
+    border: 3px solid #fff; /* 白枠で目立たせる */
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
 #ui-buttons {
     margin-bottom: 20px; /* タイトルとゲーム画面の間に空きを作る */
     display: flex;
@@ -203,11 +241,129 @@ input:checked + .slider:before {
     margin: 10px auto;    /* 上下に余白を作り、中央寄せ */
     border-radius: 8px;   /* 角を丸くするとより綺麗に見えます */
 }
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+    width: 320px; /* ゲーム画面の幅に合わせる */
+}
+.tips-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: #333;
+    border: 2px solid #555;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+    text-align: center;
+}
+.tips-icon.active {
+    background: #4a4a20;
+    border-color: #ffd700;
+    color: #fff;
+}
+
+@keyframes glowAnimation {
+    0% { filter: drop-shadow(0 0 5px #ffd700) brightness(1); }
+    50% { filter: drop-shadow(0 0 15px #ffeb3b) brightness(1.5); }
+    100% { filter: drop-shadow(0 0 5px #ffd700) brightness(1); }
+}
+
+.treasure-effect {
+    animation: glowAnimation 1.5s infinite ease-in-out;
+}
+.footer {
+    margin-top: 40px; /* ゲーム画面との間隔 */
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.footer-logo {
+    max-width: 150px; /* ロゴの適切なサイズに合わせて調整してください */
+    height: auto;
+    display: block;
+    margin: 0 auto 10px auto; /* 上下左右中央寄せ、下余白10px */
+}
+
+.copyright {
+    font-size: 18px;
+    color: #888;
+    margin: 0;
+}
+/* 共通の土台 */
+.modal-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* 色違いのバリエーション */
+.modal-button.primary {
+    background-color: #f4d03f; /* 黄色（メイン） */
+    color: #000;
+}
+
+.modal-button.secondary {
+    background-color: #555;    /* グレー（サブ） */
+    color: #fff;
+}
+
+/* ホバー時の挙動も共通化 */
+.modal-button:hover {
+    filter: brightness(1.1); /* 少し明るくする */
+}
+#mountain-info {
+    width: 320px; /* ゲーム画面の幅に合わせる */
+    text-align: center;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+/* メッセージモーダル内のボタンの間隔 */
+.button-group {
+    display: flex;
+    flex-direction: column; /* ← 縦並び */
+    gap: 12px;              /* ボタン間隔 */
+    align-items: center;    /* 中央寄せ */
+    margin-top: 16px;
+}
+/* メッセージモーダル内のボタン幅の統一 */
+.button-group .modal-button {
+    width: 220px;
+}
+#score-info {
+    width: 320px;
+    text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+#score-help-btn {
+    margin-left: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: #555;
+    color: white;
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
 
-<h1>🧗 縄文登山（Ancient Climb）</h1>
+<h1 class="logo">
+    <img src="./img/logo.png" alt="縄文登山（Ancient Climb）">
+</h1>
 
 <div id="ui-buttons">
     <label class="switch">
@@ -223,6 +379,15 @@ input:checked + .slider:before {
     </label>
     <button id="retry-btn">この山を再登頂</button>
 </div>
+<div id="mountain-info" style="
+    color: #ffd700; 
+    font-weight: bold; 
+    margin-bottom: 10px; 
+    font-size: 18px;
+">
+    第1の山　足場の数：--個
+</div>
+<div id="score-info"></div>
 <div id="game-container">
     <canvas id="gameCanvas" width="440" height="440"></canvas>
     <div id="overlay"></div>
@@ -233,6 +398,14 @@ input:checked + .slider:before {
         <div id="modal-content"></div>
     </div>
 </div>
+<div id="tips-container" class="tips-grid">
+</div>
+<footer class="footer">
+    <a href="https://factorydigital.itch.io/" target="_blank" rel="noopener noreferrer">
+        <img src="./img/fde.png" alt="Factory Digital Entertainment" class="footer-logo">
+    </a>
+    <p class="copyright">&copy;2026 Factory Digital Entertainment</p>
+</footer>
 <script>
 // =========================================================================
 // 🧭 【開発規約・最重要】ゲーム内座標（縄文座標）の絶対ルール
@@ -270,7 +443,7 @@ const MENU_ITEMS = {
 };
 
 // ゲーム状態
-let player = { x: 13, y: 1, hp: 30, maxHp: 30, tentCount: 2 }; // 例：残り2回
+let player = { x: 13, y: 1, hp: 10, maxHp: 10, tentCount: 2 }; // 例：残り2回
 let playerDir = "N"; // 初期のキャラの向き
 let holds = []; 
 let gameState = "PLAYING"; 
@@ -285,6 +458,9 @@ const bgDay = new Image();
 bgDay.src = './img/map.png';
 const bgNight = new Image();
 bgNight.src = './img/map_night.png'; // 夜用画像パスを追加
+let lastInputTime = performance.now();
+const gameStartTime = performance.now();
+let difficultyLevel = 1; // 第1の山（ステージ1）から始まる
 
 // ボタン状態
 let btnA = false; 
@@ -304,6 +480,7 @@ let invIndex = 0;
 //スプライト定数
 // 構造: "状態_向き": [x開始, y開始, 幅, 高さ]
 // 縄文座標が適用され、北と南が逆なので注意
+// キャラサイズは原則、横72x縦112（微調整アリ）
 const SPRITE_MAP = {
     "安全地帯": {
         "SW": [0, 0, 72, 112], "S": [74, 0, 72, 112], "SE": [152, 0, 72, 112],
@@ -323,8 +500,119 @@ let isImageLoaded = false; // ロード状況管理フラグ
 
 charaImage.onload = () => {
     isImageLoaded = true;
-    draw(); // 画像が準備できたら初回描画
+    requestRedraw(); // 画像が準備できたら初回描画
 };
+
+const mapIconImage = new Image();
+mapIconImage.src = './img/ico_map.gif';
+
+// --- TIPS管理データ ---
+const TIPS_MASTER = [
+    { id: 0, label: "！\n「歩く」", condition: "start", text: "方向キーで８方向に歩いてみよう。<br>「・」は安全地帯だ。自由に歩けるぞ！<br>「◆」はつかめる岩だ。自分の周囲１マス分の縦横斜めに登れるぞ！", img: "" },
+    { id: 1, label: "！\n「地図」", condition: "map", text: "🧭「古の地図」を手に入れた！<br><br>🎒アイテムメニュー（Bキー）から「全マップ表示」が使えるようになったぞ！", img: "./img/msg_map.jpg" },
+    { id: 2, label: "！\n「縄」", condition: "y6", text: "縄を使えば２～３マス離れた岩もつかめる！<br><br>(1)Aボタンで縄を構える。<br>(2)←→ボタンでつかみたい岩に狙いを定める。<br>(3)もう一度Aボタンで移動だ。<br>離れている岩ほど、体力を消耗するので注意しよう！", img: "./img/msg_rope.jpg" },
+    { id: 3, label: "！\n「夜」", condition: "night", text: "もうすぐ寒く危険な夜になる！<br><br>夜は、通ってきた岩しか見えなくなる。<br>そして、１マス先の岩に移動するだけでも体力を消耗するぞ。", img: "./img/msg_time.jpg" },
+    { id: 4, label: "！\n「回復」", condition: "hp10", text: "体力の低下に気を付けよう！<br><br>アイテム欄にある帰還用パラグライダー「天幕傘」はハンモックにもなり、１回の登山で２回まで体力を回復できる。<br>(1)Bボタンでアイテム一覧を見る<br>(2)←→で「天幕傘 TentWing(2)」を選ぶ<br>(3)もう一度Bボタンで眠りに就ける", img: "./img/msg_hplaw.jpg" }
+];
+
+// TIPS獲得状態の管理
+let tipsFlags = new Array(TIPS_MASTER.length).fill(0);
+
+// スコア管理
+let totalScore = 0;
+let scoreData = {
+    nightMoves: 0,
+    ropeUses: 0,
+    totalMoves: 0
+};
+
+// URLから状態を復元
+function loadTipsFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const tipsStr = params.get('tips');
+    if (tipsStr) {
+        for (let i = 0; i < tipsStr.length && i < tipsFlags.length; i++) {
+            tipsFlags[i] = parseInt(tipsStr[i]);
+        }
+    }
+}
+
+// URLを更新
+function updateUrlParams() {
+    const tipsStr = tipsFlags.join('');
+    const newUrl = window.location.pathname + '?tips=' + tipsStr;
+    window.history.replaceState(null, '', newUrl);
+}
+
+// TIPS獲得関数（一度だけ発動）
+function unlockTip(id, isAutoLoad = false) {
+    // 既に獲得済みなら何もしない
+    if (tipsFlags[id] === 1) return;
+
+    tipsFlags[id] = 1;
+    
+    // 【重要】ページ読み込み時の自動展開ならURL更新は不要（既にURLにあるため）
+    // ゲームプレイ中に獲得した場合のみURLを更新する
+    if (!isAutoLoad) {
+        updateUrlParams();
+    }
+    
+    updateTipsUI(); 
+    // 画像があればパスを取得してHTML文字列を作成
+    const tip = TIPS_MASTER[id];
+    let content = `<h3>💡 ${tip.label}</h3>${tip.text}`;
+    if (tip.img && tip.img !== "") {
+        content += `<br><img src="${tip.img}" style="max-width:100%; margin-top:10px;">`;
+    }
+	// 表示（gameState = "MODAL" でループ内の判定を止める）
+    showMessage(content);
+}
+
+// TIPS制御
+function updateTipsUI() {
+    const container = document.getElementById('tips-container');
+    container.innerHTML = ''; // 一度クリア
+
+    TIPS_MASTER.forEach((tip, index) => {
+        const div = document.createElement('div');
+        div.className = `tips-icon ${tipsFlags[index] ? 'active' : ''}`;
+        div.innerText = tip.label;
+        
+        // アイコンクリックで再確認できるようにする
+        if (tipsFlags[index]) {
+            // 画像パスが設定されている場合のみ、HTMLに<img>タグを連結してモーダルに渡す
+            const imageHtml = (tip.img && tip.img.length > 0) ? `<br><img src="${tip.img}" style="max-width:100%;">` : '';
+            div.onclick = () => showMessage(`<h3>💡 ${tip.label}</h3>${tip.text}${imageHtml}`);
+        }
+        
+        container.appendChild(div);
+    });
+}
+
+// TIPS条件チェック関数
+function checkTipsConditions() {
+	// まだ未獲得のTIPSがある場合のみ判定を実行する最適化
+    if (!tipsFlags.includes(0)) return;
+
+	// ※ここはTIPS1の判定があった場所ですが、スタート直後表示に変更するため空にします
+
+    // 地図入手
+    if (tipsFlags[1] === 0 && hasMapItem) {
+        unlockTip(1);
+    }
+    // Y6到達
+    if (tipsFlags[2] === 0 && player.y >= 6) {
+        unlockTip(2);
+    }
+    // 夜の2ターン前：夜の判定は MAX_TIME/2 を基準にする
+    if (tipsFlags[3] === 0 && (currentTime === (MAX_TIME / 2) - 2)) {
+        unlockTip(3);
+    }
+    // HP4以下
+    if (tipsFlags[4] === 0 && player.hp <= 4) {
+        unlockTip(4);
+    }
+}
 
 function isForbiddenArea(x, y) {
     if (x >= 1 && x <= 6 && y >= 7 && y <= 50) return true;
@@ -333,28 +621,88 @@ function isForbiddenArea(x, y) {
     return false;
 }
 
-function initMap() {
+// マップの足場（holds）を初期化・生成する関数
+// @param {number} difficulty - 現在の難易度（山の番号）。未指定時は1とする。
+//
+// 引数に difficulty = 1 を指定すると、何も渡さない時に自動的に1になる
+function initMap(difficulty = 1) {
     holds = [];
+
+    // 【難易度計算式についての設計方針】
+    // 基本の足場数 baseCount を決定します。
+    // 難易度が上がるごとに足場を減らして難しくします。
+    // 6: 初期の基本数
+    // Math.floor(difficulty / 2): 2段階ごとに足場を1つ減らす（緩やかな難化）
+    // Math.max(2, ...): 最低でも2つは足場を残し、ゲームとして詰むのを防ぐ
+	// ただし第10の山で減少を止める】
+    // difficultyが9までは減少するが、10以降は6 - 4 = 2で固定される
+	const cappedDifficulty = Math.min(difficulty, 9);
+    const baseCount = Math.max(2, 6 - Math.floor(cappedDifficulty / 2));
+
+    // 最上部（ゴールライン）の足場生成
     for(let x = 1; x <= MAP_WIDTH; x++) {
         if (!isForbiddenArea(x, 46)) {
             holds.push({x: x, y: 46});
         }
     }
+
+    // 中層の足場生成（difficultyを利用）
     for(let y = 5; y < MAP_HEIGHT; y++) {
-        if(y === 46) continue;
-        let count = 4 + Math.floor(Math.random() * 3);
+    	// ゴールライン(y46)より上はホールドを生成させない】
+        if (y >= 46) break;
+        
+        // この段のホールドを一時保存する配列
+        let currentLevelHolds = [];
+
+        // baseCount を基準に、各段で多少のランダム性(0～2個)を加える
+        let count = baseCount + Math.floor(Math.random() * 3);
         let step = Math.floor(MAP_WIDTH / count);
+
         for(let i = 0; i < count; i++) {
             let x = 1 + i * step + Math.floor(Math.random() * step);
             if(x >= 1 && x <= MAP_WIDTH && !isForbiddenArea(x, y)) {
-                holds.push({x: x, y: y});
+                currentLevelHolds.push({x: x, y: y});
             }
         }
-        if(y > 4 && y < 46) {
+
+        // 避難ルートの出現判定
+        // 難易度が高くなるほど (difficulty * 0.1) の確率で出現率が下がる
+        if(y > 4 && y < 46 && Math.random() > (cappedDifficulty * 0.05)) {
             let escapeX = 10 + Math.floor(Math.random() * 6);
             if (!isForbiddenArea(escapeX, y)) {
-                holds.push({x: escapeX, y: y});
+                currentLevelHolds.push({x: escapeX, y: y});
             }
+        }
+
+        // --- 【安全な接続チェックロジック】 ---
+        // 前の段（y-1）からジャンプで届く場所があるかを確認
+        let reachable = false;
+        for (let j = 0; j < currentLevelHolds.length; j++) {
+            let h = currentLevelHolds[j];
+            for (let k = 0; k < holds.length; k++) {
+                let prev = holds[k];
+                if (prev.y === y - 1 && Math.abs(prev.x - h.x) <= 3) {
+                    reachable = true;
+                    break;
+                }
+            }
+            if (reachable) break;
+        }
+
+        // もし届く場所がないなら、強制的に足場を1つ追加（前の段の足場の真上）
+        if (!reachable) {
+            for (let k = 0; k < holds.length; k++) {
+                if (holds[k].y === y - 1) {
+                    currentLevelHolds.push({x: holds[k].x, y: y});
+                    break;
+                }
+            }
+        }
+
+        // --- 【ループで安全に追加】 ---
+        // スプレッド演算子は使わず、一つずつ確実に pushes する
+        for (let j = 0; j < currentLevelHolds.length; j++) {
+            holds.push(currentLevelHolds[j]);
         }
     }
 }
@@ -377,20 +725,24 @@ function getDistance(x1, y1, x2, y2) {
 // 方眼スイッチのイベント設定
 document.getElementById('btn-grid').addEventListener('change', (e) => {
     showGrid = e.target.checked;
-    draw();
+    requestRedraw();
 });
 // 時間スイッチのイベント設定
 document.getElementById('btn-time').addEventListener('change', (e) => {
     isTimeMode = e.target.checked;
     if(!isTimeMode) { 
-        currentTime = 0; 
+        currentTime = 2; 
         visitedHolds = []; 
     }
-    draw();
+    requestRedraw();
 });
 
 // --- 描画処理 ---
 function draw() {
+	// モーダル表示中は判定を行わない（フリーズ防止）
+    if (gameState !== "MODAL") {
+        checkTipsConditions();
+    }
     setupCanvas();
     const camera = getCamera();
 
@@ -451,14 +803,10 @@ function getCamera() {
 }
 
 function drawBackground(camera) {
-
     const { camX, camY, vSizeX, vSizeY } = camera;
-
     const fadeDuration = 2;
     const threshold = MAX_TIME / 2;
-
     let nightAlpha = 0;
-
     if (
         currentTime >= threshold - fadeDuration &&
         currentTime <= threshold + fadeDuration
@@ -471,35 +819,27 @@ function drawBackground(camera) {
         currentTime > MAX_TIME - fadeDuration ||
         currentTime < fadeDuration
     ) {
-
         let timeFromReset =
             (currentTime < fadeDuration)
             ? currentTime
             : (currentTime - MAX_TIME);
-
         nightAlpha = Math.max(
             0,
             1 - (timeFromReset + fadeDuration)
             / (fadeDuration * 2)
         );
-
     } else {
-
         nightAlpha =
             (currentTime > threshold)
             ? 1
             : 0;
     }
-
     const imgCellW = bgDay.width / MAP_WIDTH;
     const imgCellH = bgDay.height / MAP_HEIGHT;
-
     const sx = camX * imgCellW;
     const sy = (MAP_HEIGHT - vSizeY - camY) * imgCellH;
-
     // 昼
     ctx.globalAlpha = Math.max(0, 1 - nightAlpha);
-
     if (bgDay.complete && bgDay.naturalWidth !== 0) {
 
         ctx.drawImage(
@@ -519,12 +859,9 @@ function drawBackground(camera) {
         ctx.fillStyle = "#8a7968";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-
     // 夜
     ctx.globalAlpha = Math.max(0, nightAlpha);
-
     if (bgNight.complete && bgNight.naturalWidth !== 0) {
-
         ctx.drawImage(
             bgNight,
             sx,
@@ -536,23 +873,17 @@ function drawBackground(camera) {
             canvas.width,
             canvas.height
         );
-
     } else if (nightAlpha > 0) {
-
         ctx.fillStyle = "#111";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-
     ctx.globalAlpha = 1;
 }
 
 function worldToScreen(gx, gy, camera) {
-
     const { camX, camY, vSizeY } = camera;
-
     const vx = gx - 1 - camX;
     const vy = gy - 1 - camY;
-
     return {
         px: vx * CELL_SIZE,
         py: (vSizeY - 1 - vy) * CELL_SIZE
@@ -561,44 +892,31 @@ function worldToScreen(gx, gy, camera) {
 
 
 function drawMap(camera) {
-
     drawGoalZone(camera);
-
     drawGround(camera);
-
     drawMapItem(camera);
-
+    drawTreasure(camera);
     drawHolds(camera);
-
     drawRopePreview(camera);
-
     drawGrid(camera);
 }
 
 function drawGoalZone(camera) {
-
     const {
         camX,
         camY,
         vSizeX,
         vSizeY
     } = camera;
-
     for (let vy = 0; vy < vSizeY; vy++) {
-
         for (let vx = 0; vx < vSizeX; vx++) {
-
             const gx = camX + vx + 1;
             const gy = camY + vy + 1;
-
             if (gy !== 46) continue;
-
             const { px, py } =
                 worldToScreen(gx, gy, camera);
-
             ctx.fillStyle =
                 "rgba(255,215,0,0.2)";
-
             ctx.fillRect(
                 px,
                 py,
@@ -610,35 +928,25 @@ function drawGoalZone(camera) {
 }
 
 function drawGround(camera) {
-
     const {
         camX,
         camY,
         vSizeX,
         vSizeY
     } = camera;
-
     for (let vy = 0; vy < vSizeY; vy++) {
-
         for (let vx = 0; vx < vSizeX; vx++) {
-
             const gx = camX + vx + 1;
             const gy = camY + vy + 1;
-
             if (gy < 1 || gy > 4) continue;
-
             const { px, py } =
                 worldToScreen(gx, gy, camera);
-
             ctx.fillStyle =
                 "rgba(255,255,255,0.6)";
-
             ctx.font =
                 "bold 16px sans-serif";
-
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-
             ctx.fillText(
                 "・",
                 px + CELL_SIZE / 2,
@@ -649,55 +957,68 @@ function drawGround(camera) {
 }
 
 function drawMapItem(camera) {
-
     if (hasMapItem) return;
 
-    const { px, py } =
-        worldToScreen(25, 4, camera);
+    const { px, py } = worldToScreen(25, 4, camera);
 
-    ctx.fillStyle = "#ffff00";
+    // 画像がロード済みなら描画、未ロードならフォールバックとして旧来の絵文字を表示
+    if (mapIconImage.complete && mapIconImage.naturalWidth !== 0) {
+        ctx.drawImage(mapIconImage, px, py, CELL_SIZE, CELL_SIZE);
+    } else {
+        ctx.fillStyle = "#ffff00";
+        ctx.font = "20px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("📜", px + CELL_SIZE / 2, py + CELL_SIZE / 2);
+    }
+}
 
-    ctx.font = "20px sans-serif";
-
+// 宝アイコンの描画関数
+function drawTreasure(camera) {
+    const gx = 13;
+    const gy = 48;
+    const { px, py } = worldToScreen(gx, gy, camera);
+    
+    // 【重要】ここで「今の時刻」に基づいた変動値を作る
+    // Date.now() はミリ秒単位の時刻。これを割ることで周期（速さ）を調整する
+    const time = Date.now(); 
+    const glow = Math.sin(time / 200) * 0.5 + 0.5; // 0.0〜1.0 の間で揺れる値
+    
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "bold 20px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-
-    ctx.fillText(
-        "📜",
-        px + CELL_SIZE / 2,
-        py + CELL_SIZE / 2
-    );
+    
+    // glow（0〜1）を掛けることで、光の強さが周期的に変化する
+    ctx.shadowBlur = 10 + (glow * 15); 
+    ctx.shadowColor = "#ffeb3b";
+    
+    ctx.fillText("●", px + CELL_SIZE / 2, py + CELL_SIZE / 2);
+    
+    ctx.shadowBlur = 0;
 }
 
 function drawHolds(camera) {
-
     const {
         camX,
         camY,
         vSizeX,
         vSizeY
     } = camera;
-
     for (let vy = 0; vy < vSizeY; vy++) {
-
         for (let vx = 0; vx < vSizeX; vx++) {
-
             const gx = camX + vx + 1;
             const gy = camY + vy + 1;
-
             if (!isActualHold(gx, gy)) {
                 continue;
             }
-
             const isNight =
                 isTimeMode &&
                 (currentTime > MAX_TIME / 2);
-
             const isVisited =
                 visitedHolds.some(
                     h => h.x === gx && h.y === gy
                 );
-
             if (
                 isNight &&
                 !isVisited &&
@@ -705,10 +1026,8 @@ function drawHolds(camera) {
             ) {
                 continue;
             }
-
             const { px, py } =
                 worldToScreen(gx, gy, camera);
-
             drawSingleHold(
                 gx,
                 gy,
@@ -899,24 +1218,17 @@ function drawPlayer(camera) {
 }
 
 function drawUI(camera) {
-
     updateUIPosition(camera);
-
     drawUIPanel();
-
     drawPad();
-
     drawStatusPanel();
-
     drawInventory();
-
     drawActionButtons();
-
     drawTimeGauge();
 }
 
+// UIパネルの位置設定
 function updateUIPosition(camera) {
-
     const {
         px: playerPixelX,
         py: playerPixelY
@@ -925,44 +1237,36 @@ function updateUIPosition(camera) {
         player.y,
         camera
     );
-
-    uiPos.w = 420;
-    uiPos.h = 100;
-
+    uiPos.w = 425; // UIパネルの幅
+    uiPos.h = 140; // UIパネルの高さ
+    // UIパネルの位置をプレイヤー中心 - パネル半分（プレイヤー追従で中央表示）
     uiPos.x =
         playerPixelX
         + CELL_SIZE / 2
         - uiPos.w / 2;
-
+    uiPos.x += 0; // 全体マップ時にUIパネルの位置を左右にずらせる
     if (player.y >= 7) {
-
         uiPos.y =
             playerPixelY
             + CELL_SIZE
             + (3 * CELL_SIZE);
-
     } else {
-
         uiPos.y =
             playerPixelY
             - uiPos.h
             - (3 * CELL_SIZE);
     }
-
     // はみ出し防止
     if (uiPos.y < 5) {
         uiPos.y = 5;
     }
-
     if (uiPos.y > canvas.height - uiPos.h - 5) {
         uiPos.y =
             canvas.height - uiPos.h - 5;
     }
-
     if (uiPos.x < 10) {
         uiPos.x = 10;
     }
-
     if (uiPos.x > canvas.width - uiPos.w - 10) {
         uiPos.x =
             canvas.width - uiPos.w - 10;
@@ -996,62 +1300,45 @@ function drawUIPanel() {
     );
 }
 
+//8方向キーパッド
 function drawPad() {
-
     padButtons = [];
-
-    let padCenterX = uiPos.x + 50;
+    let padCenterX = uiPos.x + 72; //8方向キーパッドの中心をUIパネルの左端から決める
     let padCenterY = uiPos.y + uiPos.h / 2;
-
-    let btnSize = 26;
-
+    let btnSize = 48; //8方向キーパッドのボタンサイズ
     const directions = [
-
         { name:"NW", dx:-1, dy:-1, label:"↖",
           key:{type:"move", x:-1, y:1}, arrow:"NW" },
-
         { name:"N", dx:0, dy:-1, label:"↑",
           key:{type:"move", x:0, y:1}, arrow:"N" },
-
         { name:"NE", dx:1, dy:-1, label:"↗",
           key:{type:"move", x:1, y:1}, arrow:"NE" },
-
         { name:"W", dx:-1, dy:0, label:"←",
           key:{type:"move", x:-1, y:0}, arrow:"W" },
-
         { name:"E", dx:1, dy:0, label:"→",
           key:{type:"move", x:1, y:0}, arrow:"E" },
-
         { name:"SW", dx:-1, dy:1, label:"↙",
           key:{type:"move", x:-1, y:-1}, arrow:"SW" },
-
         { name:"S", dx:0, dy:1, label:"↓",
           key:{type:"move", x:0, y:-1}, arrow:"S" },
-
         { name:"SE", dx:1, dy:1, label:"↘",
           key:{type:"move", x:1, y:-1}, arrow:"SE" }
     ];
-
     const isMenuMode =
         btnA || btnB;
-
     directions.forEach(d => {
-
         let bx =
             padCenterX
             + d.dx * btnSize
             - btnSize / 2;
-
         let by =
             padCenterY
             + d.dy * btnSize
             - btnSize / 2;
-
         const isActive =
             !isMenuMode ||
             d.name === "W" ||
             d.name === "E";
-
         drawPadButton(
             bx,
             by,
@@ -1069,44 +1356,34 @@ function drawPadButton(
     d,
     isActive
 ) {
-
     if (isActive) {
-
         ctx.fillStyle =
             "rgba(80,80,80,0.8)";
-
         ctx.strokeStyle = "#fff";
-
         ctx.lineWidth = 1;
-
         ctx.fillRect(
             bx,
             by,
             btnSize,
             btnSize
         );
-
         ctx.strokeRect(
             bx,
             by,
             btnSize,
             btnSize
         );
-
         ctx.fillStyle = "#fff";
-
+        //8方向キーパッドの矢印の大きさ
         ctx.font =
-            "bold 14px sans-serif";
-
+            "bold 40px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-
         ctx.fillText(
             d.label,
             bx + btnSize / 2,
             by + btnSize / 2
         );
-
         padButtons.push({
             x: bx,
             y: by,
@@ -1115,12 +1392,9 @@ function drawPadButton(
             action: d.key,
             arrow: d.arrow
         });
-
     } else {
-
         ctx.fillStyle =
             "rgba(30,30,30,0.4)";
-
         ctx.fillRect(
             bx,
             by,
@@ -1130,50 +1404,41 @@ function drawPadButton(
     }
 }
 
+//HP表示（ステータス表示）
 function drawStatusPanel() {
-
-    let textLeft = uiPos.x + 105;
-
+    let textLeft = uiPos.x + 155; //HP表示のUIパネル左端からの位置
     ctx.fillStyle = "#fff";
-
+    //HP表示の文字サイズ
     ctx.font =
-        "bold 11px sans-serif";
-
+        "bold 18px sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
-
+    //HP表示の文字の高さ位置
     ctx.fillText(
         `HP: ${player.hp}/${player.maxHp}`,
         textLeft,
-        uiPos.y + 12
+        uiPos.y + 6
     );
-
     drawHPBar(textLeft);
-
     drawStatusText(textLeft);
 }
-
+//HPバー
 function drawHPBar(textLeft) {
-
     ctx.fillStyle = "#444";
-
     ctx.fillRect(
         textLeft,
         uiPos.y + 26,
         110,
         8
     );
-
     let hpPercent =
         player.hp / player.maxHp;
-
     ctx.fillStyle =
         hpPercent > 0.5
         ? "#00ffcc"
         : hpPercent > 0.2
             ? "#f9d423"
             : "#ff4e50";
-
     ctx.fillRect(
         textLeft,
         uiPos.y + 26,
@@ -1182,146 +1447,110 @@ function drawHPBar(textLeft) {
     );
 }
 
+//移動・縄ロープ・Menu道具インベントリのモード表示
 function drawStatusText(textLeft) {
-
     let statusStr =
         btnA
         ? "🔴縄選択 Rope"
         : btnB
             ? "🎒Menu"
             : "通常移動";
-
     if (hasMapItem) {
         statusStr += " 🗺️";
     }
-
     ctx.fillStyle = "#aaa";
-
     ctx.font =
-        "10px sans-serif";
-
+        "14px sans-serif";
     ctx.fillText(
         `モード: ${statusStr}`,
         textLeft,
         uiPos.y + 42
     );
 }
-
+//インベントリ表示
 function drawInventory() {
-
     if (!btnB) return;
-
-    let textLeft = uiPos.x + 105;
-
+    let textLeft = uiPos.x + 165; //インベントリ表示のUIパネル左端からの位置
     inventory.forEach((item, index) => {
-
         const isSelected =
             index === invIndex;
-
         const color =
             item.disabled
             ? "#555"
             : isSelected
                 ? "#ffff00"
                 : "#fff";
-
         ctx.fillStyle = color;
-
         ctx.font =
-            "10px sans-serif";
-
+            "14px sans-serif";
         ctx.fillText(
             item.name,
             textLeft,
-            uiPos.y + 58 + (index * 15)
+            uiPos.y + 68 + (index * 15)
         );
     });
-
     drawInventoryHelp(textLeft);
 }
-
+//インベントリ表示のヘルプ文
 function drawInventoryHelp(textLeft) {
-
-    ctx.fillStyle = "#777";
-
+    ctx.fillStyle = "#66FFFF";
     ctx.font =
-        "9px sans-serif";
-
+        "12px sans-serif";
     let helpOffsetY =
         inventory.length * 15;
-
     ctx.fillText(
-        "左右で選んで再度Bで決定",
+        "←→で選んでBで決定",
         textLeft,
         uiPos.y + 76 + helpOffsetY
     );
 }
 
 function drawActionButtons() {
-
     drawButtonA();
-
     drawButtonB();
 }
 
+//Aボタン
 function drawButtonA() {
-
     const bx =
-        uiPos.x + uiPos.w - 55;
-
+        uiPos.x + uiPos.w - 65;
+    //-6…Bボタンより少し上
     const by =
-        uiPos.y + uiPos.h / 2 - 18;
-
-    const w = btnA ? 34 : 36;
-    const h = btnA ? 34 : 36;
-
+        uiPos.y + uiPos.h / 2 - 6;
+    const w = btnA ? 44 : 46;
+    const h = btnA ? 44 : 46;
     ctx.save();
-
     if (btnA) {
-
         ctx.translate(2, 2);
-
         ctx.fillStyle = "#cc2222";
-
     } else {
-
         ctx.fillStyle = "#ff4444";
     }
-
     ctx.strokeStyle = "#fff";
-
     ctx.lineWidth = 2;
-
     ctx.fillRect(
         bx,
         by,
         w,
         h
     );
-
     ctx.strokeRect(
         bx,
         by,
         w,
         h
     );
-
     ctx.fillStyle = "#fff";
-
     ctx.font =
-        "bold 16px sans-serif";
-
+        "bold 28px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-
     ctx.fillText(
         "A",
         bx + w / 2,
         by + h / 2
     );
-
     ctx.restore();
-
     padButtons.push({
         x: bx,
         y: by,
@@ -1330,65 +1559,47 @@ function drawButtonA() {
         action: { type: "btnA" }
     });
 }
-
+//Bボタン
 function drawButtonB() {
-
     const bx =
-        uiPos.x + uiPos.w - 105;
-
+        uiPos.x + uiPos.w - 125;
+    //+6…Aボタンより少し下
     const by =
-        uiPos.y + uiPos.h / 2 - 18;
-
-    const w = btnB ? 34 : 36;
-    const h = btnB ? 34 : 36;
-
+        uiPos.y + uiPos.h / 2 + 6;
+    const w = btnB ? 44 : 46;
+    const h = btnB ? 44 : 46;
     ctx.save();
-
     if (btnB) {
-
         ctx.translate(2, 2);
-
         ctx.fillStyle = "#ccaabb";
-
     } else {
-
         ctx.fillStyle = "#e0b0ff";
     }
-
     ctx.strokeStyle = "#fff";
-
     ctx.lineWidth = 2;
-
     ctx.fillRect(
         bx,
         by,
         w,
         h
     );
-
     ctx.strokeRect(
         bx,
         by,
         w,
         h
     );
-
     ctx.fillStyle = "#222";
-
     ctx.font =
-        "bold 16px sans-serif";
-
+        "bold 28px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-
     ctx.fillText(
         "B",
         bx + w / 2,
         by + h / 2
     );
-
     ctx.restore();
-
     padButtons.push({
         x: bx,
         y: by,
@@ -1397,37 +1608,30 @@ function drawButtonB() {
         action: { type: "btnB" }
     });
 }
-
+//時間バー（昼夜バー）
 function drawTimeGauge() {
-
     if (!isTimeMode) return;
-
     const barX =
-        uiPos.x + uiPos.w - 150;
-
+        uiPos.x + uiPos.w - 12; //昼夜バーのUIパネル右端からの位置
     const barY =
-        uiPos.y + 10;
-
-    ctx.fillStyle = "#333";
-
+        uiPos.y + 10; 
+    ctx.fillStyle = "#333333";
+    //昼夜バーの幅と高さ
     ctx.fillRect(
         barX,
         barY,
-        10,
+        8,
         80
     );
-
     const timePercent =
         Math.min(
             currentTime / MAX_TIME,
             1
         );
-
     ctx.fillStyle =
         timePercent > 0.5
-        ? "#555"
+        ? "#0000FF"
         : "#ffcc00";
-
     ctx.fillRect(
         barX,
         barY + 80 * (1 - timePercent),
@@ -1436,43 +1640,31 @@ function drawTimeGauge() {
     );
 }
 
-
-
-
 function drawEffects(camera) {
-
-    if (
-        gameState !== "CLEAR" &&
-        gameState !== "GAMEOVER"
-    ) {
+    if (gameState !== "CLEAR" && gameState !== "GAMEOVER") {
         return;
     }
-
-    const { px, py } =
-        worldToScreen(player.x, player.y, camera);
-
-    ctx.fillStyle =
-        (gameState === "CLEAR")
-        ? "#00ff00"
-        : "#ff3333";
-
+    const { px, py } = worldToScreen(player.x, player.y, camera);
+    //const text = (gameState === "CLEAR") ? "Yeehaw!\nClimb Complete!" : "Oops-a-daisy!\nClimb Failed...";
+    // メッセージはoverlay側に任せるのでここでは空にする
+	const text = (gameState === "CLEAR") ? "" : "";
+	
+    ctx.fillStyle = (gameState === "CLEAR") ? "#00ff00" : "#ffffff";
     ctx.font = "bold 36px sans-serif";
-
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-
-    const text =
-        (gameState === "CLEAR")
-        ? "GAME CLEAR!!"
-        : "GAME OVER";
-
-    ctx.fillText(
-        text,
-        px + CELL_SIZE / 2,
-        py - CELL_SIZE * 2
-    );
+    // --- ここから改行処理 ---
+    const lines = text.split('\n');
+    const lineHeight = 40; // 行間の高さ（フォントサイズに合わせて調整）
+    lines.forEach((line, index) => {
+        ctx.fillText(
+            line,
+            px + CELL_SIZE / 2,
+            (py - CELL_SIZE * 2) + (index * lineHeight)
+        );
+    });
+    // --- ここまで ---
 }
-
 
 // --- 🎮 移動・アクションロジックの共通化 ---
 function handleMoveInput(dx, dy, arrowName) {
@@ -1501,7 +1693,7 @@ function handleMoveInput(dx, dy, arrowName) {
         // 通常移動
         movePlayer(player.x + dx, player.y + dy, 0);
     }
-    draw();
+    requestRedraw();
 }
 
 function handleButtonA() {
@@ -1533,10 +1725,11 @@ function handleButtonA() {
         } else {
             if(validRopeTargets.length > 0) {
                 let dist = getDistance(player.x, player.y, ropeTarget.x, ropeTarget.y);
+                scoreData.ropeUses++; //得点計算用（ロープ使用回数）
                 movePlayer(ropeTarget.x, ropeTarget.y, dist);
             }
         }
-        draw();
+        requestRedraw();
     }
 }
 
@@ -1546,7 +1739,7 @@ function handleButtonB() {
     if (btnA) {
         btnA = false;
         validRopeTargets = [];
-        draw();
+        requestRedraw();
         return;
     }
 
@@ -1574,14 +1767,12 @@ function handleButtonB() {
                 triggerPortaledge();
 			} else if (selected.name === MENU_ITEMS.MAP_FULL || selected.name === MENU_ITEMS.MAP_NORMAL) {
                 isFullMapMode = !isFullMapMode;
-                
-                // ここにあったcanvasの直接操作を削除し、draw()を呼ぶだけで済むようにする
-                draw(); 
+                requestRedraw(); 
             }
         }
         btnB = false;
     }
-    draw();
+    requestRedraw();
 }
 
 function movePlayer(targetX, targetY, cost) {
@@ -1611,10 +1802,12 @@ function movePlayer(targetX, targetY, cost) {
         let actualCost = cost;
         if (isTimeMode && (currentTime > MAX_TIME / 2) && cost === 0 && targetY >= 5) {
             actualCost = 1;
+            scoreData.nightMoves++; //得点計算用（夜間移動記録）
         }
 
         player.x = targetX;
         player.y = targetY;
+        scoreData.totalMoves++; //得点計算用（総移動数）
         player.hp -= actualCost; // 修正したコストを反映
         
         // 💡 踏破記録処理
@@ -1633,26 +1826,95 @@ function movePlayer(targetX, targetY, cost) {
 		// movePlayer 関数内の当該箇所を修正
 		if (player.x === 25 && player.y === 4 && !hasMapItem) {
 		    hasMapItem = true;
-		    
-		    // alertからモーダル表示に変更
-		    showMessage(`
-		        <h3>🧭 古の地図</h3>
-		        「古の地図」を手に入れた！<br>
-		        <img src="./img/msg_map.jpg"><br>
-		        🎒アイテムメニュー（Bキー）から
-		        「全マップ表示」が使えるようになったぞ！
-		    `);
+		    // 地図TIPS表示へ
+		    unlockTip(1);
 		}
 
         if(player.hp <= 0) {
-            player.hp = 0;
+			player.hp = 0;
             gameState = "GAMEOVER";
-            if(overlay) overlay.style.background = "rgba(255,0,0,0.2)"; 
-        } else if(player.y >= 46) {
-            gameState = "CLEAR";
-            if(overlay) overlay.style.background = "rgba(0,128,0,0.2)"; 
-        }
+            
+            // 💡 GAMEOVER表示処理を追加
+            if(overlay) {
+                overlay.style.background = "rgba(255, 100, 120, 0.25)"; // 夕焼けフィルター
+
+				overlay.innerHTML = `
+				    <div>Oops! Climb Failed...</div>
+				    <img src='./img/gamefailed.jpg'>
+				    <button class="modal-button primary" id="retry-btn-dynamic">この山を再登頂する</button>
+				`;
+
+				// イベント設定（IDは特定のボタンを指定するために使用）
+				document.getElementById('retry-btn-dynamic').addEventListener('click', () => {
+				    resetGame();
+				    overlay.style.opacity = '0';
+				    overlay.style.pointerEvents = 'none';
+				});
+
+                overlay.style.display = "flex";       // 表示する
+                overlay.style.opacity = "1";          // フェードイン
+                overlay.style.pointerEvents = "auto"; // クリックを有効にする
+            }
+		} else if(player.y >= 46) {
+		    gameState = "CLEAR";
+		    //得点計算用（クリア時加算）
+		    const gainedScore = calculateScore();
+			totalScore += gainedScore;
+			
+		    if(overlay) {
+		        overlay.style.background = "rgba(10,40,10,0.45)"; // 緑のフィルター
+		        overlay.innerHTML = "<div>Climb Complete!</div><img src='./img/gameclear.jpg'>";
+
+				overlay.innerHTML = `
+				    <div>Climb Complete!</div>
+				    <img src='./img/gameclear.jpg'>
+				    <div class="button-group">
+				        <button class="modal-button primary" id="next-mountain-btn">次の山へ登る</button>
+				        <button class="modal-button secondary" id="retry-btn-dynamic">この山を再登頂する</button>
+				    </div>
+				`;
+
+				// イベント設定（IDは「それぞれの処理」を特定するためだけに使う）
+				document.getElementById('next-mountain-btn').addEventListener('click', startNextMountain);
+				document.getElementById('retry-btn-dynamic').addEventListener('click', resetGame);
+
+		        overlay.style.display = "flex";       // 表示する
+		        overlay.style.opacity = "1";          // 透明度を戻す
+		        overlay.style.pointerEvents = "auto"; // クリックを有効にする
+		    }
+		}
     }
+}
+
+// 第2の山以降
+function startNextMountain() {
+    // 1. 難易度を上げてマップ再構築
+    difficultyLevel++;
+    initMap(difficultyLevel); 
+
+    // 2. ステータス強化（ここをリセット処理よりも先にやる）
+	// 山をクリアするたびに成長させて最大HPを増やしたい場合は以下のコメントを外す
+    //player.maxHp += 5;
+    
+    // 3. リセット処理
+    // ※resetGameの中でplayer.hp = player.maxHp;をしているので、
+    // 強化した後のmaxHpが反映されるはずです
+    resetGame();
+
+    // 4. 情報更新と地図再配置
+    updateMountainInfo(); //山レベルと足場の数
+    updateScoreInfo(); //得点表示と得点ヘルプ
+    relocateMapItem();
+
+    // 5. 個別の状態設定
+    player.tentCount = 2;
+    hasMapItem = false;
+
+    // 6. オーバーレイを閉じる
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    
+    requestRedraw();
 }
 
 function triggerPortaledge() {
@@ -1661,32 +1923,65 @@ function triggerPortaledge() {
         alert("天幕傘の残り回数がありません！");
         return;
     }
-
     gameState = "SLEEPING";
-    player.tentCount--; // 回数を消費
-
-	// 💡 修正：時間モードONの時、ターンはリセットするが、踏破記録(visitedHolds)は維持する
+    player.tentCount--;
+    // 時間モードONの時、ターンはリセットするが、踏破記録(visitedHolds)は維持する
     if (isTimeMode) {
         currentTime = 0;
     }
+    if (!overlay) return;
+    overlay.style.display = "flex";
+    overlay.style.background = "rgba(0,0,0,0.95)";
+    overlay.style.pointerEvents = "auto";
 
-    if(overlay) {
-        overlay.innerText = "Good Night!";
-        overlay.style.background = "rgba(0,0,0,0.95)";
-    }
+    // 中身用レイヤー
+    overlay.innerHTML = `
+        <div id="sleep-scene" style="
+            opacity:1;
+            transition: opacity 0.8s ease;
+            text-align:center;
+        ">
+            Good Night!<br>
+            <img src='./img/goodnight.jpg'>
+        </div>
+    `;
+    overlay.style.opacity = "1";
+    const scene = document.getElementById("sleep-scene");
+    // -------------------------
+    // GOOD NIGHT 表示
+    // -------------------------
     setTimeout(() => {
-        if(overlay) overlay.innerText = "Good Morning!";
-        player.hp = player.maxHp;
-        draw();
+        // 中身だけフェードアウト
+        scene.style.opacity = "0";
         setTimeout(() => {
-            if(overlay) {
-                overlay.innerText = "";
-                overlay.style.background = "rgba(0,0,0,0)";
-            }
+            // 黒背景は維持したまま差し替え
+            scene.innerHTML = `
+                Good Morning!<br>
+                <img src='./img/goodmorning.jpg'>
+            `;
+            // HP回復
+            player.hp = player.maxHp;
+            // ★ここ重要
+            // 朝になった瞬間にPLAYINGへ戻す
             gameState = "PLAYING";
-            draw();
-        }, 1000);
-    }, 1000);
+            requestRedraw();
+            // 再フェードイン
+            scene.style.opacity = "1";
+            // -------------------------
+            // GOOD MORNING 表示
+            // -------------------------
+            setTimeout(() => {
+                scene.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.innerHTML = "";
+                    overlay.style.display = "none";
+                    overlay.style.pointerEvents = "none";
+                    overlay.style.background = "rgba(0,0,0,0)";
+                    requestRedraw();
+                }, 800);
+            }, 1500);
+        }, 800);
+    }, 1500);
 }
 
 // --- 📱 タッチ／クリック位置判定イベント ---
@@ -1751,13 +2046,24 @@ window.addEventListener('keydown', (e) => {
         if (activeKeys['ArrowLeft']) tDx = -1;
         if (activeKeys['ArrowRight']) tDx = 1;
         
+        // 移動入力があったとみなす
+        if (tDx !== 0 || tDy !== 0) {
+            lastInputTime = performance.now(); // ★追記
+        }
+        
         // 押し込んでいる間に、最終的な移動方向（直進 or 斜め）がここに確定する
         pendingMove.dx = tDx;
         pendingMove.dy = tDy;
     }
 
-    if(e.key.toLowerCase() === 'a') handleButtonA();
-    if(e.key.toLowerCase() === 'b') handleButtonB();
+	if(e.key.toLowerCase() === 'a') {
+        lastInputTime = performance.now(); // ★追記（Aボタン操作も入力とみなす場合）
+        handleButtonA();
+    }
+    if(e.key.toLowerCase() === 'b') {
+        lastInputTime = performance.now(); // ★追記（Bボタン操作も入力とみなす場合）
+        handleButtonB();
+    }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -1809,47 +2115,172 @@ window.addEventListener('keyup', (e) => {
 });
 // 「再登頂」ボタンの処理
 document.getElementById('retry-btn').addEventListener('click', () => {
+	resetGame();
+});
+
+// 共通のリセット（再登頂）関数
+function resetGame() {
     // 1. プレイヤーの座標をリセット
-    // ※元のコードの player オブジェクトの構造に合わせて修正
-    player.x = 13; // 初期座標
-    player.y = 1;  // 初期座標
+    player.x = 13; 
+    player.y = 1;  
     
     // 2. 状態変数をリセット
     player.hp = player.maxHp;
-    player.tentCount = 2; // 必要に応じて初期値を設定
+    player.tentCount = 2; 
     currentTime = 0;
-    visitedHolds = [];    // 踏破記録をリセット
+    visitedHolds = [];    
     gameState = "PLAYING";
     hasMapItem = false;
     isFullMapMode = false;
     
+    // 得点の計算元データをクリア（総合得点totalScoreは消さない）
+    scoreData = {
+	    nightMoves: 0,
+	    ropeUses: 0,
+	    totalMoves: 0
+	};
+    
     // 3. オーバーレイの表示をクリア
     if(overlay) {
-        overlay.innerText = "";
+        overlay.innerHTML = ""; // innerHTMLを空にする
         overlay.style.background = "rgba(0,0,0,0)";
+        overlay.style.display = "none"; // 表示を隠す
+        overlay.style.pointerEvents = "none";
     }
 
-    // ※ holds を再生成しないことで、現在の山の形状を維持します。
-    
     // 4. 再描画を実行
-    draw();
-});
+    requestRedraw();
+}
 
-// --- 追加：モーダル制御 ---
+// モーダル制御 ---
 const modal = document.getElementById('message-modal');
 document.getElementById('close-modal').addEventListener('click', () => {
     modal.style.display = 'none';
-    gameState = "PLAYING"; // 操作を再開
+    gameState = "PLAYING"; 
+    
+    // 【重要】ここでキー入力状態を強制リセットする
+    if (typeof activeKeys !== 'undefined') {
+        for (let key in activeKeys) {
+            activeKeys[key] = false;
+        }
+    }
+    
+    // 必要であれば操作の確定処理などもここでリセット
+    // 例: pendingMove = null; 
+    
+    requestRedraw();
 });
 
 function showMessage(htmlContent) {
-	gameState = "MODAL"; // 移動や操作を無効化する新しい状態
+    // 1. 状態をモーダルにする
+    gameState = "MODAL"; 
+    // 2. 【重要】押しっぱなしのキー状態を強制リセット（クリア）する
+    activeKeys = {}; 
+    // 3. 【追加】移動予定のバッファもリセット
+    pendingMove = { dx: 0, dy: 0 }; 
+    
     document.getElementById('modal-content').innerHTML = htmlContent;
     modal.style.display = 'flex';
 }
 
-setInterval(draw, 100);
-initMap();
+// --- 🔄 描画リクエスト用関数（これを使えば効率的に描画される） ---
+let animationFrameId = null;
+
+// 必要な時だけ描画処理を実行し、消費電力を抑える
+function requestRedraw() {
+    // すでに予約が入っているなら何もしない（無駄な連打を防ぐ）
+    if (animationFrameId !== null) return;
+    
+    // 次のブラウザの描画タイミングで draw() を1回だけ実行する
+    animationFrameId = requestAnimationFrame(() => {
+        draw();
+        animationFrameId = null; // 描画が終わったら予約を解除
+    });
+}
+
+// 現在の山の情報を画面に反映する
+function updateMountainInfo() {
+    const infoDiv = document.getElementById('mountain-info');
+    if (infoDiv) {
+        // difficultyLevelが未定義なら1をデフォルトにする
+        const mountainNum = (typeof difficultyLevel !== 'undefined') ? difficultyLevel : 1;
+        
+        // 足場の数を取得（安全地帯を除く実際のホールド数）
+        const holdCount = holds.length;
+        
+        infoDiv.innerText = `第${mountainNum}の山　足場の数：${holdCount}個`;
+    }
+}
+
+//得点計算
+function calculateScore() {
+
+    const rawScore =
+        difficultyLevel * 1000 +
+        player.hp * 200 +
+        player.tentCount * 500 +
+        scoreData.nightMoves * 50 -
+        scoreData.ropeUses * 30 -
+        scoreData.totalMoves * 2;
+
+    // マイナス禁止
+    return Math.max(0, rawScore);
+}
+
+//得点表示＆得点表示のヘルプ
+function updateScoreInfo() {
+    const scoreDiv =
+        document.getElementById('score-info');
+    if (!scoreDiv) return;
+    scoreDiv.innerHTML = `
+        総合得点：${totalScore}
+        <button id="score-help-btn">？</button>
+    `;
+    const helpBtn =
+        document.getElementById('score-help-btn');
+    if (helpBtn) {
+        helpBtn.onclick = () => {
+            const currentScore =
+                calculateScore();
+            showMessage(`
+                <h2>🏆 得点計算式</h2>
+                <p>
+                山レベル × 1000 = ${difficultyLevel * 1000}<br>
+                残HP × 200 = ${player.hp * 200}<br>
+                未使用天幕傘 × 500 = ${player.tentCount * 500}<br>
+                夜間移動 × 50 = ${scoreData.nightMoves * 50}<br>
+                ロープ使用 × -30 = ${scoreData.ropeUses * -30}<br>
+                総移動数 × -2 = ${scoreData.totalMoves * -2}
+                </p>
+                <hr>
+                <h3>
+                現在の獲得予定スコア：
+                ${currentScore}
+                </h3>
+            `);
+        };
+    }
+}
+
+// スクリプトの末尾付近に記述
+window.addEventListener('load', () => {
+    loadTipsFromUrl(); 
+    updateTipsUI();    
+
+    // URLパラメータが存在しない、かつTipsがまだ一度も表示されていない場合のみ実行する
+    // また、unlockTip内でURLの更新処理が行われるため、
+    // 「初回ロード時のみ」の制御を明確にします
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('tips') && tipsFlags[0] === 0) {
+        unlockTip(0);
+    }
+});
+
+
+initMap(); // これだけで自動的に initMap(1) として動く
+updateMountainInfo(); // ここで「第1の山」と表示させる
+requestRedraw();
+
 </script>
 
 </body>
