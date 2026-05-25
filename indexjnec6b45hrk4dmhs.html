@@ -2186,16 +2186,30 @@ function handleCanvasTap(clientX, clientY) {
 }
 
 // マウスクリックイベント
-canvas.addEventListener('mousedown', (e) => {
-    handleCanvasTap(e.clientX, e.clientY);
-});
+// タッチ端末では擬似マウスイベントによる二重入力を防ぐ
+const isTouchDevice =
+    ('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0);
+if (!isTouchDevice) {
+    canvas.addEventListener('mousedown', (e) => {
+        handleCanvasTap(
+            e.clientX,
+            e.clientY
+        );
+    });
+}
 
 // スマホタッチイベント
+// 全スマホの二重発火防止のため preventDefault を使用
 canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     if (e.touches.length > 0) {
-        handleCanvasTap(e.touches[0].clientX, e.touches[0].clientY);
+        handleCanvasTap(
+            e.touches[0].clientX,
+            e.touches[0].clientY
+        );
     }
-});
+}, { passive: false });
 
 // =========================================================================
 // ⌨️ 【開発規約・最重要命令】PCキーボード操作ロジック（不具合修正版）
