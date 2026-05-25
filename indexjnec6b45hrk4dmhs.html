@@ -250,8 +250,8 @@ input:checked + .slider:before {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 10px;
-    margin-top: 20px;
-    width: 320px; /* ゲーム画面の幅に合わせる */
+	margin: 20px auto 0 auto;
+    width: 380px;
 }
 .tips-icon {
     width: 60px;
@@ -1266,20 +1266,45 @@ function drawGrid(camera) {
     }
 }
 
-
+//キャラ描画
 function drawPlayer(camera) {
     const { px, py } = worldToScreen(player.x, player.y, camera);
-
     // 眠っている時（天幕傘）
     if (gameState === "SLEEPING") {
         ctx.fillStyle = "#5dade2";
         ctx.fillRect(px + 8, py + 8, CELL_SIZE - 16, CELL_SIZE - 16);
         return;
     }
-
-    // --- 修正後：単一の描画ロジックに統合 ---
+    // スプライト描画ロジック
     if (isImageLoaded) {
-        const state = (player.y >= 1 && player.y <= 4) ? "安全地帯" : "ホールド";
+
+		// 場所によってスプライトのセットを変える
+	    let isSafeZone = false;
+	    // 地上
+	    if (player.y >= 1 && player.y <= 4) {
+	        isSafeZone = true;
+	    }
+	    // 山頂47段
+	    if (
+	        player.y === 47 &&
+	        player.x >= 7 &&
+	        player.x <= 19
+	    ) {
+	        isSafeZone = true;
+	    }
+	    // 山頂48段
+	    if (
+	        player.y === 48 &&
+	        player.x >= 9 &&
+	        player.x <= 18
+	    ) {
+	        isSafeZone = true;
+	    }
+	    const state =
+	        isSafeZone
+	        ? "安全地帯"
+	        : "ホールド";
+
         // playerDir が未定義の場合を考慮
         const dir = playerDir || "N"; 
         const spriteData = SPRITE_MAP[state][dir];
@@ -2391,7 +2416,7 @@ function showTitleScreen() {
         <div id="title-panel">
 
             <img
-                src="./img/title.png"
+                src="./img/title.jpg"
                 alt="タイトル"
                 id="title-image"
             >
