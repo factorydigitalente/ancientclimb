@@ -565,6 +565,12 @@ const mapIconImage = new Image();
 mapIconImage.src = './img/ico_map.gif';
 
 // --- TIPS管理データ ---
+// 通常TIPS：0～
+// 山クリア報酬：1000番台
+// ※ 実際の取得判定は condition の
+// "m+山番号+comp"（例: m1comp）で行っている。
+// id番号そのものには特別な意味はない。
+// （1000番台にしているのは分類しやすくするため）
 const TIPS_MASTER = [
     { id: 0, label: "！\n歩く", condition: "start", text: "方向キーで８方向に歩いてみよう。<br>「・」は安全地帯だ。自由に歩けるぞ！<br>「◆」はつかめる岩や足場だ。自分の周囲１マス分の縦横斜めに登れるぞ！", img: "" },
     { id: 1, label: "！\n地図", condition: "map", text: "🧭「古の地図」を手に入れた！<br><br>🎒アイテムメニュー（Bキー）から「全マップ表示」が使えるようになったぞ！", img: "./img/msg_map.jpg" },
@@ -572,16 +578,16 @@ const TIPS_MASTER = [
     { id: 3, label: "！\n夜", condition: "night", text: "もうすぐ寒く危険な夜になる！<br><br>夜は、通ってきた岩しか見えなくなる。<br>そして、１マス先の岩に移動するだけでも体力を消耗するぞ。", img: "./img/msg_time.jpg" },
     { id: 4, label: "！\n回復", condition: "hp10", text: "体力の低下に気を付けよう！<br><br>アイテム欄にある帰還用パラグライダー「天幕傘」はハンモックにもなり、１回の登山で２回まで体力を回復できる。<br>(1)Bボタンでアイテム一覧を見る<br>(2)←→で「天幕傘 TentWing(2)」を選ぶ<br>(3)もう一度Bボタンで眠りに就ける", img: "./img/msg_hplaw.jpg" },
     { id: 5, label: "！\n第2の山", condition: "mountain2", text: "第1の山の登頂おめでとう！<br><br>第2の山からは少しずつ崖が険しくなっていくぞ！", img: "" },
-    { id: 101, label: "！\nお山1制覇", condition: "m1comp", text: "第1の山の登頂記念品", img: "" },
-    { id: 102, label: "！\n御山2制覇", condition: "m2comp", text: "第2の山の登頂記念品", img: "" },
-    { id: 103, label: "！\n霊峰3制覇", condition: "m3comp", text: "第3の山の登頂記念品", img: "" },
-    { id: 104, label: "！\n神山4制覇", condition: "m4comp", text: "第4の山の登頂記念品", img: "" },
-    { id: 105, label: "！\n地獄山5制覇", condition: "m5comp", text: "第5の山の登頂記念品", img: "" },
-    { id: 106, label: "！\n霧山6制覇", condition: "m6comp", text: "第6の山の登頂記念品", img: "" },
-    { id: 107, label: "！\n棘山7制覇", condition: "m7comp", text: "第7の山の登頂記念品", img: "" },
-    { id: 108, label: "！\n岩山8制覇", condition: "m8comp", text: "第8の山の登頂記念品", img: "" },
-    { id: 109, label: "！\n平山9制覇", condition: "m9comp", text: "第9の山の登頂記念品", img: "" },
-    { id: 110, label: "！\n崖山10制覇", condition: "m10comp", text: "第10の山の登頂記念品", img: "" }
+    { id: 1001, label: "記念品\n山1", condition: "m1comp", text: "第1の山の登頂記念品", img: "./img/fde.png" },
+    { id: 1002, label: "記念品\n山2", condition: "m2comp", text: "第2の山の登頂記念品", img: "" },
+    { id: 1003, label: "記念品\n山3", condition: "m3comp", text: "第3の山の登頂記念品", img: "" },
+    { id: 1004, label: "記念品\n山4", condition: "m4comp", text: "第4の山の登頂記念品", img: "" },
+    { id: 1005, label: "記念品\n山5", condition: "m5comp", text: "第5の山の登頂記念品", img: "" },
+    { id: 1006, label: "記念品\n山6", condition: "m6comp", text: "第6の山の登頂記念品", img: "" },
+    { id: 1007, label: "記念品\n山7", condition: "m7comp", text: "第7の山の登頂記念品", img: "" },
+    { id: 1008, label: "記念品\n山8", condition: "m8comp", text: "第8の山の登頂記念品", img: "" },
+    { id: 1009, label: "記念品\n山9", condition: "m9comp", text: "第9の山の登頂記念品", img: "" },
+    { id: 1010, label: "記念品\n山10", condition: "m10comp", text: "第10の山の登頂記念品", img: "" }
 ];
 
 // TIPS獲得状態の管理
@@ -687,6 +693,21 @@ function checkTipsConditions() {
         unlockTip(5);
     }
 }
+
+// 山クリア用トロフィー取得（TIPS1000番台）
+function unlockMountainTrophy(mountainNum) {
+    const trophyCondition =
+        `m${mountainNum}comp`;
+    const tip =
+        TIPS_MASTER.find(
+            t => t.condition === trophyCondition
+        );
+    if (!tip) return;
+    const index =
+        TIPS_MASTER.indexOf(tip);
+    unlockTip(index);
+}
+
 //進入不可領域
 function isForbiddenArea(x, y) {
 	// 左側の崖
@@ -2062,29 +2083,44 @@ function movePlayer(targetX, targetY, cost) {
 		    //得点計算用（クリア時加算）
 		    const gainedScore = calculateScore();
 			totalScore += gainedScore;
-			
-		    if(overlay) {
-		        overlay.style.background = "rgba(10,40,10,0.45)"; // 緑のフィルター
-		        overlay.innerHTML = "<div>Climb Complete!</div><img src='./img/gameclear.jpg'>";
 
-				overlay.innerHTML = `
-				    <div>Climb Complete!</div>
-				    <img src='./img/gameclear.jpg'>
-				    <div class="button-group">
-				        <button class="modal-button primary" id="next-mountain-btn">次の山へ登る</button>
-				        <button class="modal-button secondary" id="retry-btn-dynamic">この山を再登頂する</button>
-				    </div>
-				`;
+			// 山クリアトロフィー取得
+			unlockMountainTrophy(difficultyLevel);
 
-				// イベント設定（IDは「それぞれの処理」を特定するためだけに使う）
-				document.getElementById('next-mountain-btn').addEventListener('click', startNextMountain);
-				document.getElementById('retry-btn-dynamic').addEventListener('click', resetGame);
-
-		        overlay.style.display = "flex";       // 表示する
-		        overlay.style.opacity = "1";          // 透明度を戻す
-		        overlay.style.pointerEvents = "auto"; // クリックを有効にする
-		    }
+			// CLEAR表示
+			showClearModal();
 		}
+    }
+}
+
+//クリア表示関数
+function showClearModal() {
+    if(overlay) {
+        overlay.style.background =
+            "rgba(10,40,10,0.45)";
+		overlay.innerHTML = `
+		    <div>Climb Complete!</div>
+		    <img src='./img/gameclear.jpg'>
+		    <div class="button-group">
+		        <button class="modal-button primary" id="next-mountain-btn">次の山へ登る</button>
+		        <button class="modal-button secondary" id="retry-btn-dynamic">この山を再登頂する</button>
+		    </div>
+        `;
+        document
+            .getElementById('next-mountain-btn')
+            .addEventListener(
+                'click',
+                startNextMountain
+            );
+        document
+            .getElementById('retry-btn-dynamic')
+            .addEventListener(
+                'click',
+                resetGame
+            );
+        overlay.style.display = "flex";
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "auto";
     }
 }
 
