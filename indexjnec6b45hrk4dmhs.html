@@ -433,6 +433,14 @@ input:checked + .slider:before {
     z-index: 99999;
     padding: 20px;
 }
+/* =====================================================
+📱 スマホ用軽量ズーム
+===================================================== */
+
+#game-container {
+    transform-origin: top center;
+    transition: transform 0.25s ease;
+}
 </style>
 </head>
 <body>
@@ -2574,6 +2582,7 @@ function requestRedraw() {
     
     // 次のブラウザの描画タイミングで draw() を1回だけ実行する
     animationFrameId = requestAnimationFrame(() => {
+    	updateMobileScale();
         draw();
         animationFrameId = null; // 描画が終わったら予約を解除
     });
@@ -2803,6 +2812,39 @@ function updateOrientationBlock() {
     }
 }
 
+// =====================================================
+// 📱 スマホ通常登山時の軽量ズーム
+// =====================================================
+
+function updateMobileScale() {
+    const gameContainer =
+        document.getElementById(
+            'game-container'
+        );
+    if (!gameContainer) return;
+    // PCは現状維持
+    if (!isMobileDevice()) {
+        gameContainer.style.transform =
+            'scale(1)';
+        return;
+    }
+    // 横向き中は拡大しない
+    if (isLandscape()) {
+        gameContainer.style.transform =
+            'scale(1)';
+        return;
+    }
+    // 全体マップ時は通常倍率
+    if (isFullMapMode) {
+        gameContainer.style.transform =
+            'scale(1)';
+    } else {
+        // 通常登山時だけ軽く拡大
+        gameContainer.style.transform =
+            'scale(1.12)'; //1.12以上は危険
+    }
+}
+
 window.addEventListener(
     'resize',
     updateOrientationBlock
@@ -2812,6 +2854,7 @@ window.addEventListener(
     'orientationchange',
     updateOrientationBlock
 );
+
 
 // スクリプトの末尾付近に記述
 window.addEventListener('load', async () => {
