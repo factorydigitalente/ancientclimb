@@ -603,6 +603,47 @@ let scoreData = {
     totalMoves: 0
 };
 
+// BGM管理
+const bgmNoon = new Audio('./bgm/bgm_noon.mp3');
+const bgmNight = new Audio('./bgm/bgm_night.mp3');
+const bgmFailed = new Audio('./bgm/bgm_failed.mp3');
+const bgmClear = new Audio('./bgm/bgm_clear.mp3');
+const bgmSleep = new Audio('./bgm/bgm_sleep.mp3');
+const bgmTitle = new Audio('./bgm/bgm_title.mp3');
+// ループ設定
+bgmNoon.loop = true;
+bgmNight.loop = true;
+bgmTitle.loop = true;
+// ジングルはループしない
+bgmFailed.loop = false;
+bgmClear.loop = false;
+bgmSleep.loop = false;
+// 音量
+bgmNoon.volume = 0.5;
+bgmNight.volume = 0.5;
+bgmFailed.volume = 0.6;
+bgmClear.volume = 0.6;
+bgmSleep.volume = 0.6;
+bgmTitle.volume = 0.6;
+// 現在の通常BGM
+let currentBGM = null;
+// 移動SE
+const moveSE = {
+    N:  new Audio('./bgm/arrow_n_1.mp3'),
+    NW: new Audio('./bgm/arrow_nw_2.mp3'),
+    NE: new Audio('./bgm/arrow_ne_4.mp3'),
+    W:  new Audio('./bgm/arrow_w_3.mp3'),
+    E:  new Audio('./bgm/arrow_e_5.mp3'),
+    SW: new Audio('./bgm/arrow_sw_6.mp3'),
+    S:  new Audio('./bgm/arrow_s_d4.mp3'),
+    SE: new Audio('./bgm/arrow_se_7.mp3')
+};
+// 移動SE音量（小さめ推奨）
+Object.values(moveSE).forEach(se => {
+    se.volume = 0.38;
+});
+
+
 // URLから状態を復元
 function loadTipsFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -2014,6 +2055,12 @@ function movePlayer(targetX, targetY, cost) {
 
         player.x = targetX;
         player.y = targetY;
+        // 移動SE
+		const se = moveSE[playerDir];
+		if (se) {
+		    se.currentTime = 0;
+		    se.play().catch(() => {});
+		}
         scoreData.totalMoves++; //得点計算用（総移動数）
         player.hp -= actualCost; // 修正したコストを反映
         
@@ -2028,6 +2075,7 @@ function movePlayer(targetX, targetY, cost) {
             if (currentTime >= MAX_TIME) {
                 currentTime = 0;
             }
+            updateBGM();
         }
 
 		// movePlayer 関数内の当該箇所を修正
@@ -2040,6 +2088,10 @@ function movePlayer(targetX, targetY, cost) {
         if(player.hp <= 0) {
 			player.hp = 0;
             gameState = "GAMEOVER";
+			stopAllBGM();
+			bgmFailed.play().catch(err => {
+			    console.log(err);
+			});
             
             // 💡 GAMEOVER表示処理を追加
             if(overlay) {
@@ -2085,6 +2137,10 @@ function movePlayer(targetX, targetY, cost) {
             }
 		} else if(player.x === 13 && player.y === 48) {
 		    gameState = "CLEAR";
+			stopAllBGM();
+			bgmClear.play().catch(err => {
+			    console.log(err);
+			});
 		    //得点計算用（クリア時加算）
 		    const gainedScore = calculateScore();
 			totalScore += gainedScore;
@@ -2174,6 +2230,15 @@ function triggerPortaledge() {
         return;
     }
     gameState = "SLEEPING";
+	// ★ 睡眠BGM
+	[bgmNoon,bgmNight,bgmFailed,bgmClear,bgmTitle].forEach(bgm => {
+	    bgm.pause();
+	    bgm.currentTime = 0;
+	});
+	bgmSleep.currentTime = 0;
+	bgmSleep.play();
+	currentBGM = bgmSleep;
+
     player.tentCount--;
     // 時間モードONの時、ターンはリセットするが、踏破記録(visitedHolds)は維持する
     if (isTimeMode) {
@@ -2211,9 +2276,12 @@ function triggerPortaledge() {
             `;
             // HP回復
             player.hp = player.maxHp;
-            // ★ここ重要
+			// sleep停止
+			bgmSleep.pause();
+			bgmSleep.currentTime = 0;
             // 朝になった瞬間にPLAYINGへ戻す
             gameState = "PLAYING";
+            updateBGM();
             requestRedraw();
             // 再フェードイン
             scene.style.opacity = "1";
@@ -2387,6 +2455,13 @@ document.getElementById('retry-btn').addEventListener('click', () => {
 
 // 共通のリセット（再登頂）関数
 function resetGame() {
+    // 全BGM停止
+    [bgmNoon, bgmNight, bgmFailed, bgmClear, bgmSleep,bgmTitle].forEach(bgm => {
+        bgm.pause();
+        bgm.currentTime = 0;
+    });
+    currentBGM = null;
+
     // 1. プレイヤーの座標をリセット
     player.x = 13; 
     player.y = 1;  
@@ -2417,6 +2492,7 @@ function resetGame() {
 
     // 4. 再描画を実行
     requestRedraw();
+    updateBGM();
 }
 
 // タイトルへ戻る専用の完全初期化
@@ -2465,50 +2541,60 @@ function showMessage(htmlContent) {
 
 // タイトルモーダル表示
 function showTitleScreen() {
-
     // 既に存在していたら作らない
     if (document.getElementById('title-modal')) {
         return;
     }
-
     const modal = document.createElement('div');
-
     modal.id = 'title-modal';
-
     modal.innerHTML = `
         <div id="title-panel">
-
-            <img
-                src="./img/title.jpg"
-                alt="タイトル"
-                id="title-image"
-            >
-
-            <button
-                id="start-game-btn"
-                class="modal-button primary"
-            >
-                登頂開始
-            </button>
-
+            <img src="./img/title.jpg" alt="縄文登山 Jomon Tozan - Ancient Climb -" id="title-image">
+            <button id="start-game-btn" class="modal-button primary">登頂開始</button>
         </div>
     `;
-
     document.body.appendChild(modal);
-
     // ★ append後に取得すること
     const startBtn =
         document.getElementById('start-game-btn');
-
     if (startBtn) {
         startBtn.addEventListener(
             'click',
             startGameFromTitle
         );
     }
+	const titleModal = document.getElementById('title-modal');
+	if (titleModal) {
+	    const unlockTitleBGM = () => {
+	    	console.log("タイトルBGM開始");
+	        // 既に鳴ってるなら何もしない
+	        if (currentBGM === bgmTitle) {
+	            return;
+	        }
+	        // 全停止
+	        [bgmNoon,bgmNight,bgmFailed,bgmClear,bgmSleep].forEach(bgm => {
+	            bgm.pause();
+	            bgm.currentTime = 0;
+	        });
+	        // タイトル再生
+	        bgmTitle.currentTime = 0;
+	        bgmTitle.play().catch(() => {});
+	        currentBGM = bgmTitle;
+	    };
+
+	    // 画面のどこ触ってもOK
+		titleModal.addEventListener(
+		    'click',
+		    unlockTitleBGM,
+		    { once: true }
+		);
+	}
 }
 //タイトルモーダルからゲーム開始へつなげる
 function startGameFromTitle() {
+	// タイトルBGM停止
+	bgmTitle.pause();
+	bgmTitle.currentTime = 0;
     const modal =
         document.getElementById('title-modal');
     if (modal) {
@@ -2524,9 +2610,6 @@ function startGameFromTitle() {
         updateScoreInfo();
     }
     
-    // BGM開始したいならここ
-    // bgm.play();
-
     // 初回Tips
     const urlParams =
         new URLSearchParams(window.location.search);
@@ -2538,6 +2621,7 @@ function startGameFromTitle() {
         unlockTip(0);
     }
 	gameState = "PLAYING"; //TITLEモードからゲームモードへ変更
+	updateBGM();
     requestRedraw();
 }
 
@@ -2749,7 +2833,47 @@ async function loadHighScore() {
     }
 }
 
-
+// BGM切替関数
+function updateBGM() {
+	if (gameState === "SLEEPING") {return;}
+    const isNight = isTimeMode && currentTime > MAX_TIME / 2;
+    const targetBgm =
+        isNight
+        ? bgmNight
+        : bgmNoon;
+    // 同じBGMが「再生中」なら何もしない
+    if (
+        currentBGM === targetBgm &&
+        !targetBgm.paused
+    ) {
+        return;
+    }
+    // 別BGM停止
+    if (
+        currentBGM &&
+        currentBGM !== targetBgm
+    ) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
+    }
+    currentBGM = targetBgm;
+    currentBGM.play().catch(err => {
+        console.log('BGM autoplay blocked:',err);
+    });
+}
+// BGM共通停止関数
+function stopAllBGM() {
+    [
+        bgmNoon,
+        bgmNight,
+        bgmFailed,
+        bgmClear
+    ].forEach(bgm => {
+        bgm.pause();
+        bgm.currentTime = 0;
+    });
+    currentBGM = null;
+}
 
 // スクリプトの末尾付近に記述
 window.addEventListener('load', async () => {
