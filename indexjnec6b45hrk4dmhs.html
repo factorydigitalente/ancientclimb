@@ -343,7 +343,7 @@ input:checked + .slider:before {
     width: 220px;
 }
 #score-info {
-    width: 320px;
+    width: 430px;
     text-align: center;
     color: #ffffff;
     font-weight: bold;
@@ -414,6 +414,25 @@ input:checked + .slider:before {
     transform: translateY(2px);
     box-shadow: 0 1px 0 #b38f00;
 }
+/* =====================================================
+📱 スマホ横向き禁止オーバーレイ
+===================================================== */
+
+#orientation-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    color: #fff;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1.8;
+    z-index: 99999;
+    padding: 20px;
+}
 </style>
 </head>
 <body>
@@ -446,6 +465,10 @@ input:checked + .slider:before {
 </div>
 <div id="score-info"></div>
 <div id="game-container">
+	<div id="orientation-overlay">
+	    📱<br>
+	    縦向きにしてください
+	</div>
     <canvas id="gameCanvas" width="440" height="440"></canvas>
     <div id="overlay"></div>
     <div id="wind-layer"></div>
@@ -519,6 +542,8 @@ let lastInputTime = performance.now();
 const gameStartTime = performance.now();
 let difficultyLevel = 1; // 第1の山（ステージ1）から始まる
 const GOAL_Y = 46; // ゴールラインは縄文座標のy46段目
+let debugStartStage = null; //デバッグ用ステージセレクト（URLパラメータ例：st=9）
+let highScore = 0;
 
 // ボタン状態
 let btnA = false; 
@@ -722,10 +747,9 @@ function isForbiddenArea(x, y) {
 }
 
 // マップの足場（holds）を初期化・生成する関数
-// @param {number} difficulty - 現在の難易度（山の番号）。未指定時は1とする。
-//
-// 引数に difficulty = 1 を指定すると、何も渡さない時に自動的に1になる
-function initMap(difficulty = 1) {
+// @param {number} difficulty - 現在の難易度（山の番号）。
+function initMap(difficulty = difficultyLevel) {
+	difficultyLevel = difficulty;
     holds = [];
 
     // 【難易度計算式についての設計方針】
@@ -1019,6 +1043,9 @@ function drawMap(camera) {
 }
 
 function drawGoalZone(camera) {
+    // 方眼OFF時は黄帯を描画しない
+    if (!showGrid) return;
+    
     const {
         camX,
         camY,
@@ -2062,9 +2089,10 @@ function movePlayer(targetX, targetY, cost) {
 				    overlay.style.transition = "opacity 0.5s ease";
 				    overlay.style.opacity = "0";
 				    overlay.style.pointerEvents = "none";
+
 				    setTimeout(() => {
-				        // ② ゲーム状態リセット
-				        resetGame();
+				        // ② タイトル復帰専用リセット
+				        resetToTitleState();
 				        // ③ 完全にクリア
 				        overlay.innerHTML = "";
 				        overlay.style.display = "none";
@@ -2083,6 +2111,14 @@ function movePlayer(targetX, targetY, cost) {
 		    //得点計算用（クリア時加算）
 		    const gainedScore = calculateScore();
 			totalScore += gainedScore;
+			// ハイスコア更新
+			if (totalScore > highScore) {
+
+			    highScore = totalScore;
+
+			    // URL保存
+			    saveHighScore(highScore);
+			}
 
 			// 山クリアトロフィー取得
 			unlockMountainTrophy(difficultyLevel);
@@ -2142,7 +2178,6 @@ function startNextMountain() {
     // 4. 情報更新と地図再配置
     updateMountainInfo(); //山レベルと足場の数
     updateScoreInfo(); //得点表示と得点ヘルプ
-    relocateMapItem();
 
     // 5. 個別の状態設定
     player.tentCount = 2;
@@ -2407,6 +2442,21 @@ function resetGame() {
     requestRedraw();
 }
 
+// タイトルへ戻る専用の完全初期化
+function resetToTitleState() {
+    // 難易度をリセット
+    difficultyLevel = 1;
+    // ステージ1再生成
+    initMap(1);
+    // 総合スコアも初期化
+    totalScore = 0;
+    // 通常リセット
+    resetGame();
+    // UI更新を追加 ← これ重要
+    updateMountainInfo();
+    updateScoreInfo();
+}
+
 // モーダル制御 ---
 const modal = document.getElementById('message-modal');
 
@@ -2482,14 +2532,21 @@ function showTitleScreen() {
 }
 //タイトルモーダルからゲーム開始へつなげる
 function startGameFromTitle() {
-
     const modal =
         document.getElementById('title-modal');
-
     if (modal) {
         modal.remove();
     }
-
+    
+    // debug stage 指定時はそのステージを生成
+    if (debugStartStage !== null) {
+        difficultyLevel = debugStartStage;
+        initMap(difficultyLevel);
+        resetGame();
+        updateMountainInfo();
+        updateScoreInfo();
+    }
+    
     // BGM開始したいならここ
     // bgm.play();
 
@@ -2559,6 +2616,7 @@ function updateScoreInfo() {
     scoreDiv.innerHTML = `
         総合得点：${totalScore}
         <button id="score-help-btn">？</button>
+        ／🏆最高記録：${highScore}
     `;
     const helpBtn =
         document.getElementById('score-help-btn');
@@ -2586,16 +2644,214 @@ function updateScoreInfo() {
     }
 }
 
+// =====================================================
+// 🔐 URL署名付きハイスコアシステム
+// =====================================================
+// 軽い難読化
+const SECRET_PARTS = [
+    "mount",
+    "ain",
+    "_climb",
+    "_2025"
+];
+
+function getSecret() {
+    return SECRET_PARTS.join('');
+}
+
+// URL-safe Base64
+function toUrlSafeBase64(bytes) {
+    let binary = '';
+    bytes.forEach(b => {
+        binary += String.fromCharCode(b);
+    });
+    return btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+function fromUrlSafeBase64(str) {
+    str = str
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    while (str.length % 4) {
+        str += '=';
+    }
+    const binary = atob(str);
+    return Uint8Array.from(
+        [...binary].map(c => c.charCodeAt(0))
+    );
+}
+
+// SHA-256
+async function sha256(text) {
+    const data =
+        new TextEncoder().encode(text);
+    const hashBuffer =
+        await crypto.subtle.digest(
+            'SHA-256',
+            data
+        );
+    return new Uint8Array(hashBuffer);
+}
+
+// score署名生成
+async function signScore(score) {
+    const secret = getSecret();
+    const payload =
+        `${score}:${secret}`;
+    const hash =
+        await sha256(payload);
+    return toUrlSafeBase64(hash);
+}
+
+// hs保存
+async function saveHighScore(score) {
+    const encodedScore =
+        toUrlSafeBase64(
+            new TextEncoder().encode(
+                String(score)
+            )
+        );
+    const signature =
+        await signScore(score);
+    const url =
+        new URL(window.location);
+    url.searchParams.set(
+        'hs',
+        `${encodedScore}.${signature}`
+    );
+    history.replaceState(
+        {},
+        '',
+        url
+    );
+}
+
+// hs読込
+async function loadHighScore() {
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+    const hs =
+        params.get('hs');
+    if (!hs) {
+        return null;
+    }
+    const split = hs.split('.');
+    if (split.length !== 2) {
+        return null;
+    }
+    const [
+        encodedScore,
+        signature
+    ] = split;
+    try {
+        const score =
+            parseInt(
+                new TextDecoder().decode(
+                    fromUrlSafeBase64(encodedScore)
+                )
+            );
+        if (isNaN(score)) {
+            return null;
+        }
+        const expected =
+            await signScore(score);
+        if (expected !== signature) {
+            console.warn(
+                '⚠️ ハイスコア署名不一致'
+            );
+            return null;
+        }
+        return score;
+    } catch {
+        return null;
+    }
+}
+
+// =====================================================
+// 📱 スマホ横向き禁止
+// =====================================================
+function isMobileDevice() {
+    return window.innerWidth <= 900;
+}
+function isLandscape() {
+    return window.innerWidth > window.innerHeight;
+}
+function updateOrientationBlock() {
+    const orientationOverlay =
+        document.getElementById(
+            'orientation-overlay'
+        );
+    const shouldBlock =
+        isMobileDevice() &&
+        isLandscape();
+    if (shouldBlock) {
+        orientationOverlay.style.display =
+            'flex';
+        canvas.style.display = 'none';
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    } else {
+        orientationOverlay.style.display =
+            'none';
+        canvas.style.display = 'block';
+    }
+}
+
+window.addEventListener(
+    'resize',
+    updateOrientationBlock
+);
+
+window.addEventListener(
+    'orientationchange',
+    updateOrientationBlock
+);
+
 // スクリプトの末尾付近に記述
-window.addEventListener('load', () => {
-    loadTipsFromUrl(); 
-    updateTipsUI();    
+window.addEventListener('load', async () => {
+    // -------------------------
+    // デバッグ用ステージ指定
+    // ?st=9
+    // 相応のホールド数で開始でき、後追いトロフィー取得はなし。
+    // -------------------------
+    const params =
+        new URLSearchParams(window.location.search);
+    const st =
+        parseInt(params.get('st'));
+   
+    if (!isNaN(st) && st >= 1) {
+	    debugStartStage = st;
+	    difficultyLevel = st;
+	    initMap(difficultyLevel);
+	}
+
+    // 🔐 ハイスコア復元
+    const loadedScore =
+        await loadHighScore();
+    if (loadedScore !== null) {
+        highScore = loadedScore;
+    }
+
+	//通常のロード処理
+    loadTipsFromUrl();
+    updateTipsUI();
+    
+    // 📱 画面向きチェック
+	updateOrientationBlock();
+
+	//初期化
+    initMap(difficultyLevel); //開始ステージ
+	updateMountainInfo(); // ここで「第●の山」と表示させる
+	requestRedraw();
+	showTitleScreen();
 });
 
-initMap(); // これだけで自動的に initMap(1) として動く
-updateMountainInfo(); // ここで「第1の山」と表示させる
-requestRedraw();
-showTitleScreen();
 </script>
 
 </body>
