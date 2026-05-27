@@ -33,6 +33,19 @@ body {
     padding: 20px 0; /* 上下に余白を設定 */
     user-select: none;
 }
+#title-bgm-ctrl{
+    margin-top:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+#title-panel #title-bgm-ctrl{
+    background:rgba(0,0,0,0.45);
+    padding:6px 12px;
+    border-radius:999px;
+    backdrop-filter: blur(2px);
+}
 h1.logo {
     margin: 0 0 10px 0;
     line-height: 0; /* 画像の下の隙間を消す */
@@ -129,10 +142,12 @@ canvas {
     position: relative;
     width: 40px;
     height: 20px;
-    background-color: #555;
+    background-color: #999; /* OFF時グレー */
+    border: 2px solid #000;
     border-radius: 20px;
     transition: 0.4s;
-    margin-right: 10px;
+    margin-left: 0px;
+    box-shadow: 0 2px 0 #555;
 }
 
 /* 丸いツマミ */
@@ -143,14 +158,15 @@ canvas {
     width: 14px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
+    background-color: #111;
     border-radius: 50%;
     transition: 0.4s;
 }
 
 /* ONの状態（色がつく） */
 input:checked + .slider {
-    background-color: #00ffcc;
+    background-color: #ffcc00; /* 黄色 */
+    box-shadow: 0 2px 0 #b38f00;
 }
 
 /* ツマミが右に移動 */
@@ -162,15 +178,23 @@ input:checked + .slider:before {
     font-size: 14px;
     color: #fff;
 }
+#game-bgm-ctrl,
+.game-switch-ctrl{
+    display:flex;
+    align-items:center;
+    gap:0px;
+}
+
 #wind-layer {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    /* pointer-events: none; */ /* 重要：ゲームのクリックやタッチを妨げない */
     display: none;       /* 初期状態は非表示 */
     overflow: hidden;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
     background-size: 200% 100%;
     animation: windMove 1s linear infinite; /* 2s:弱い 0.5s:強い */
+	/* 以下はスマホでのタッチなどのブラウザ操作を無効にして誤操作を防ぐための行だが、地図表示時にスクロール不能になるのでコメントアウトした */
+    /* pointer-events: none; */ 
 }
 
 @keyframes windMove {
@@ -245,6 +269,14 @@ input:checked + .slider:before {
     display: block;       /* 余計な隙間を消す */
     margin: 10px auto;    /* 上下に余白を作り、中央寄せ */
     border-radius: 8px;   /* 角を丸くするとより綺麗に見えます */
+}
+/* モーダル表示時の暗幕 */
+#modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    z-index: 900;
 }
 .tips-grid {
     display: grid;
@@ -417,7 +449,6 @@ input:checked + .slider:before {
 /* =====================================================
    共通
 ===================================================== */
-
 #mobile-scroll-wrapper {
 
     width: 100%;
@@ -431,41 +462,64 @@ input:checked + .slider:before {
    📱 スマホ専用スクロール
 ===================================================== */
 @media (max-width: 768px) {
-
     html,
     body {
         margin: 0;
         padding: 0;
         width: 100%;
         min-height: 100%;
-
         /* ← 消す */
         /* overflow: hidden; */
-
         touch-action: pan-x pan-y;
     }
-
     body {
         display: flex;
         justify-content: center;
         align-items: flex-start;
     }
-
     #mobile-scroll-wrapper {
-
         width: max-content;
         min-width: 100%;
         min-height: 100vh;
-
         overflow: auto;
-
         -webkit-overflow-scrolling: touch;
-
         overscroll-behavior: contain;
-
         padding: 12px;
         box-sizing: border-box;
     }
+}
+
+/* =========================
+   PRESS MODAL
+========================= */
+#press-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        url('./img/titlebg.jpg')
+        center center / cover
+        no-repeat;
+}
+#press-panel {
+    text-align: center;
+}
+#press-text {
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: bold;
+    color: white;
+    text-shadow:
+        0 0 8px rgba(0,0,0,0.9);
+    animation:
+        pressBlink 1.6s infinite;
+}
+@keyframes pressBlink {
+    0% { opacity: 1;}
+    50% { opacity: 0.25;}
+    100% { opacity: 1;}
 }
 </style>
 </head>
@@ -476,17 +530,30 @@ input:checked + .slider:before {
 </h1>
 
 <div id="ui-buttons">
-    <label class="switch">
-        <input type="checkbox" id="btn-grid" checked>
-        <span class="slider"></span>
+    <!-- BGMスイッチ -->
+    <div id="game-bgm-ctrl">
+        <span class="label-text">♪</span>
+        <label class="switch">
+            <input type="checkbox" id="btn-bgm" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+    <!-- 方眼スイッチ -->
+    <div class="game-switch-ctrl">
         <span class="label-text">方眼</span>
-    </label>
+        <label class="switch">
+            <input type="checkbox" id="btn-grid" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
     <!-- 時間スイッチ -->
-	<label class="switch">
-        <input type="checkbox" id="btn-time" checked>
-        <span class="slider"></span>
+    <div class="game-switch-ctrl">
         <span class="label-text">夜あり</span>
-    </label>
+        <label class="switch">
+            <input type="checkbox" id="btn-time" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
     <button id="retry-btn">この山を再登頂</button>
 </div>
 <div id="mountain-info" style="
@@ -503,6 +570,7 @@ input:checked + .slider:before {
     <div id="overlay"></div>
     <div id="wind-layer"></div>
     
+    <div id="modal-backdrop"></div><!-- モーダル時用の暗幕 -->
     <div id="message-modal" style="display:none;">
         <button id="close-modal">×</button>
         <div id="modal-content"></div>
@@ -628,22 +696,22 @@ mapIconImage.src = './img/ico_map.gif';
 // id番号そのものには特別な意味はない。
 // （1000番台にしているのは分類しやすくするため）
 const TIPS_MASTER = [
-    { id: 0, label: "！\n歩く", condition: "start", text: "方向キーで８方向に歩いてみよう。<br>「・」は安全地帯だ。自由に歩けるぞ！<br>「◆」はつかめる岩や足場だ。自分の周囲１マス分の縦横斜めに登れるぞ！", img: "" },
-    { id: 1, label: "！\n地図", condition: "map", text: "🧭「古の地図」を手に入れた！<br><br>🎒アイテムメニュー（Bキー）から「全マップ表示」が使えるようになったぞ！", img: "./img/msg_map.jpg" },
-    { id: 2, label: "！\n縄", condition: "y6", text: "縄を使えば２～３マス離れた岩もつかめる！<br><br>(1)Aボタンで縄を構える。<br>(2)←→ボタンでつかみたい岩に狙いを定める。<br>(3)もう一度Aボタンで移動だ。<br>離れている岩ほど、体力を消耗するので注意しよう！", img: "./img/msg_rope.jpg" },
-    { id: 3, label: "！\n夜", condition: "night", text: "もうすぐ寒く危険な夜になる！<br><br>夜は、通ってきた岩しか見えなくなる。<br>そして、１マス先の岩に移動するだけでも体力を消耗するぞ。", img: "./img/msg_time.jpg" },
-    { id: 4, label: "！\n回復", condition: "hp10", text: "体力の低下に気を付けよう！<br><br>アイテム欄にある帰還用パラグライダー「天幕傘」はハンモックにもなり、１回の登山で２回まで体力を回復できる。<br>(1)Bボタンでアイテム一覧を見る<br>(2)←→で「天幕傘 TentWing(2)」を選ぶ<br>(3)もう一度Bボタンで眠りに就ける", img: "./img/msg_hplaw.jpg" },
-    { id: 5, label: "！\n第2の山", condition: "mountain2", text: "第1の山の登頂おめでとう！<br><br>第2の山からは少しずつ崖が険しくなっていくぞ！", img: "" },
-    { id: 1001, label: "記念品\n山1", condition: "m1comp", text: "第1の山の登頂記念品", img: "./img/fde.png" },
-    { id: 1002, label: "記念品\n山2", condition: "m2comp", text: "第2の山の登頂記念品", img: "" },
-    { id: 1003, label: "記念品\n山3", condition: "m3comp", text: "第3の山の登頂記念品", img: "" },
-    { id: 1004, label: "記念品\n山4", condition: "m4comp", text: "第4の山の登頂記念品", img: "" },
-    { id: 1005, label: "記念品\n山5", condition: "m5comp", text: "第5の山の登頂記念品", img: "" },
-    { id: 1006, label: "記念品\n山6", condition: "m6comp", text: "第6の山の登頂記念品", img: "" },
-    { id: 1007, label: "記念品\n山7", condition: "m7comp", text: "第7の山の登頂記念品", img: "" },
-    { id: 1008, label: "記念品\n山8", condition: "m8comp", text: "第8の山の登頂記念品", img: "" },
-    { id: 1009, label: "記念品\n山9", condition: "m9comp", text: "第9の山の登頂記念品", img: "" },
-    { id: 1010, label: "記念品\n山10", condition: "m10comp", text: "第10の山の登頂記念品", img: "" }
+    { id: 0, label: "🧗\n歩く", condition: "start", text: "方向キーで８方向に歩いてみよう。<br>「・」は安全地帯だ。自由に歩けるぞ！<br>「◆」はつかめる岩や足場だ。自分の周囲１マス分の縦横斜めに登れるぞ！", img: "" },
+    { id: 1, label: "📒\n地図", condition: "map", text: "🧭「古の地図」を手に入れた！<br><br>🎒アイテムメニュー（Bキー）から「全マップ表示」が使えるようになったぞ！", img: "./img/msg_map.jpg" },
+    { id: 2, label: "🪢\n縄", condition: "y6", text: "縄を使えば２～３マス離れた岩もつかめる！<br><br>(1)Aボタンで縄を構える。<br>(2)←→ボタンでつかみたい岩に狙いを定める。<br>(3)もう一度Aボタンで移動だ。<br>離れている岩ほど、体力を消耗するので注意しよう！", img: "./img/msg_rope.jpg" },
+    { id: 3, label: "🌙\n夜", condition: "night", text: "もうすぐ寒く危険な夜になる！<br><br>夜は、通ってきた岩しか見えなくなる。<br>そして、１マス先の岩に移動するだけでも体力を消耗するぞ。", img: "./img/msg_time.jpg" },
+    { id: 4, label: "♡\n回復", condition: "hp10", text: "体力の低下に気を付けよう！<br><br>アイテム欄にある帰還用パラグライダー「天幕傘」はハンモックにもなり、１回の登山で２回まで体力を回復できる。<br>(1)Bボタンでアイテム一覧を見る<br>(2)←→で「天幕傘 TentWing(2)」を選ぶ<br>(3)もう一度Bボタンで眠りに就ける", img: "./img/msg_hplaw.jpg" },
+    { id: 5, label: "🌄\n第2の山", condition: "mountain2", text: "第1の山の登頂おめでとう！<br><br>第2の山からは少しずつ崖が険しくなっていくぞ！", img: "" },
+    { id: 1001, label: "🏆\n山1", condition: "m1comp", text: "第1の山の登頂記念品", img: "./img/fde.png" },
+    { id: 1002, label: "🏆\n山2", condition: "m2comp", text: "第2の山の登頂記念品", img: "" },
+    { id: 1003, label: "🏆\n山3", condition: "m3comp", text: "第3の山の登頂記念品", img: "" },
+    { id: 1004, label: "🏆\n山4", condition: "m4comp", text: "第4の山の登頂記念品", img: "" },
+    { id: 1005, label: "🏆\n山5", condition: "m5comp", text: "第5の山の登頂記念品", img: "" },
+    { id: 1006, label: "🏆\n山6", condition: "m6comp", text: "第6の山の登頂記念品", img: "" },
+    { id: 1007, label: "🏆\n山7", condition: "m7comp", text: "第7の山の登頂記念品", img: "" },
+    { id: 1008, label: "🏆\n山8", condition: "m8comp", text: "第8の山の登頂記念品", img: "" },
+    { id: 1009, label: "🏆\n山9", condition: "m9comp", text: "第9の山の登頂記念品", img: "" },
+    { id: 1010, label: "🏆\n山10", condition: "m10comp", text: "第10の山の登頂記念品", img: "" }
 ];
 
 // TIPS獲得状態の管理
@@ -658,6 +726,8 @@ let scoreData = {
 };
 
 // BGM管理
+let isBgmEnabled = true;
+const btnBgm = document.getElementById("btn-bgm");
 const bgmNoon = new Audio('./bgm/bgm_noon.mp3');
 const bgmNight = new Audio('./bgm/bgm_night.mp3');
 const bgmFailed = new Audio('./bgm/bgm_failed.mp3');
@@ -869,7 +939,6 @@ function initMap(difficulty = difficultyLevel) {
                 currentLevelHolds.push({x: escapeX, y: y});
             }
         }
-
         // --- 【安全な接続チェックロジック】 ---
         // 前の段（y-1）からジャンプで届く場所があるかを確認
         let reachable = false;
@@ -884,7 +953,6 @@ function initMap(difficulty = difficultyLevel) {
             }
             if (reachable) break;
         }
-
         // もし届く場所がないなら、強制的に足場を1つ追加（前の段の足場の真上）
         if (!reachable) {
             for (let k = 0; k < holds.length; k++) {
@@ -894,7 +962,6 @@ function initMap(difficulty = difficultyLevel) {
                 }
             }
         }
-
         // --- 【ループで安全に追加】 ---
         // スプレッド演算子は使わず、一つずつ確実に pushes する
         for (let j = 0; j < currentLevelHolds.length; j++) {
@@ -2402,6 +2469,7 @@ if (!isTouchDevice) {
 // スマホタッチイベント
 // 全スマホの二重発火防止のため preventDefault を使用
 canvas.addEventListener('touchstart', (e) => {
+	// 以下はスマホでのタッチなどのブラウザ操作を無効にして誤操作を防ぐための行だが、地図表示時にスクロール不能になるのでコメントアウトした
     //e.preventDefault();
     if (e.touches.length > 0) {
         handleCanvasTap(
@@ -2572,8 +2640,10 @@ function resetToTitleState() {
 // モーダル制御 ---
 const modal = document.getElementById('message-modal');
 
+// メッセージモーダル閉じる
 document.getElementById('close-modal').addEventListener('click', () => {
     modal.style.display = 'none';
+    document.getElementById('modal-backdrop').style.display = 'none'; //暗幕終了
     gameState = "PLAYING";
 
     // キー入力状態を完全クリア
@@ -2596,6 +2666,53 @@ function showMessage(htmlContent) {
     
     document.getElementById('modal-content').innerHTML = htmlContent;
     modal.style.display = 'flex';
+    document.getElementById('modal-backdrop').style.display = 'block'; //暗幕表示
+}
+
+// PRESS ANY KEY モーダル
+function showPressModal() {
+    // 二重生成防止
+    if (document.getElementById('press-modal')) {
+        return;
+    }
+    const modal = document.createElement('div');
+    modal.id = 'press-modal';
+    modal.innerHTML = `
+        <div id="press-panel">
+            <div id="press-text">
+                Please Touch<br>or<br>Press Any Key
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    // 入力待ち
+    const startPress = () => {
+        // モーダル削除
+        modal.remove();
+        // タイトル表示
+        showTitleScreen();
+        // タイトルBGM開始
+        if (isBgmEnabled) {
+            stopAllBGM();
+            bgmTitle.currentTime = 0;
+            bgmTitle.play().catch(() => {});
+            currentBGM = bgmTitle;
+        }
+        // イベント解除
+        window.removeEventListener('keydown', startPress);
+    };
+    // キー入力
+    window.addEventListener(
+        'keydown',
+        startPress,
+        { once: true }
+    );
+    // タッチ入力
+    modal.addEventListener(
+        'click',
+        startPress,
+        { once: true }
+    );
 }
 
 // タイトルモーダル表示
@@ -2610,10 +2727,39 @@ function showTitleScreen() {
         <div id="title-panel">
             <img src="./img/title.jpg" alt="縄文登山 Jomon Tozan - Ancient Climb -" id="title-image">
             <button id="start-game-btn" class="modal-button primary">登頂開始</button>
+			<!-- BGMスイッチ -->
+		    <div id="title-bgm-ctrl">
+		        <span class="label-text">♪</span>
+		        <label class="switch">
+		            <input type="checkbox"
+		                   id="title-btn-bgm"
+		                   checked>
+		            <span class="slider"></span>
+		        </label>
+		    </div>
         </div>
     `;
     document.body.appendChild(modal);
-    // ★ append後に取得すること
+    // ★ 以下、titleBtnBgmとstartBtnはappend後に取得すること
+
+	const titleBtnBgm =
+        document.getElementById('title-btn-bgm');
+    if (titleBtnBgm) {
+        titleBtnBgm.checked = isBgmEnabled;
+        titleBtnBgm.addEventListener('change', () => {
+            isBgmEnabled = titleBtnBgm.checked;
+            btnBgm.checked = isBgmEnabled;
+            if (isBgmEnabled) {
+                stopAllBGM();
+                bgmTitle.currentTime = 0;
+                bgmTitle.play().catch(() => {});
+                currentBGM = bgmTitle;
+            } else {
+                stopAllBGM();
+            }
+        });
+    }
+
     const startBtn =
         document.getElementById('start-game-btn');
     if (startBtn) {
@@ -2625,21 +2771,23 @@ function showTitleScreen() {
 	const titleModal = document.getElementById('title-modal');
 	if (titleModal) {
 	    const unlockTitleBGM = () => {
-	    	console.log("タイトルBGM開始");
-	        // 既に鳴ってるなら何もしない
-	        if (currentBGM === bgmTitle) {
-	            return;
-	        }
-	        // 全停止
-	        [bgmNoon,bgmNight,bgmFailed,bgmClear,bgmSleep].forEach(bgm => {
-	            bgm.pause();
-	            bgm.currentTime = 0;
-	        });
-	        // タイトル再生
-	        bgmTitle.currentTime = 0;
-	        bgmTitle.play().catch(() => {});
-	        currentBGM = bgmTitle;
-	    };
+	    	// タイトル画面がもう消えていたら再生しない
+		    if (!document.getElementById('title-modal')) {
+		        return;
+		    }
+
+		    if (!isBgmEnabled) {
+		        return;
+		    }
+		    console.log("タイトルBGM開始");
+		    if (currentBGM === bgmTitle && !bgmTitle.paused) {
+		        return;
+		    }
+		    stopAllBGM();
+		    bgmTitle.currentTime = 0;
+		    bgmTitle.play().catch(() => {});
+		    currentBGM = bgmTitle;
+		};
 
 	    // 画面のどこ触ってもOK
 		titleModal.addEventListener(
@@ -2894,6 +3042,11 @@ async function loadHighScore() {
 
 // BGM切替関数
 function updateBGM() {
+	//BGMスイッチに連動
+    if (!isBgmEnabled) {
+        stopAllBGM();
+        return;
+    }
 	if (gameState === "SLEEPING") {return;}
     const isNight = isTimeMode && currentTime > MAX_TIME / 2;
     const targetBgm =
@@ -2926,13 +3079,27 @@ function stopAllBGM() {
         bgmNoon,
         bgmNight,
         bgmFailed,
-        bgmClear
+        bgmClear,
+        bgmSleep,
+        bgmTitle
     ].forEach(bgm => {
         bgm.pause();
         bgm.currentTime = 0;
     });
     currentBGM = null;
 }
+
+// BGMスイッチ
+btnBgm.addEventListener("change", () => {
+    isBgmEnabled = btnBgm.checked;
+    if (isBgmEnabled) {
+        // 現在状況に応じたBGM再開
+        updateBGM();
+    } else {
+        // 全停止
+        stopAllBGM();
+    }
+});
 
 // スクリプトの末尾付近に記述
 window.addEventListener('load', async () => {
@@ -2967,7 +3134,7 @@ window.addEventListener('load', async () => {
     initMap(difficultyLevel); //開始ステージ
 	updateMountainInfo(); // ここで「第●の山」と表示させる
 	requestRedraw();
-	showTitleScreen();
+	showPressModal();
 });
 
 </script>
