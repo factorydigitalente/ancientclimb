@@ -430,45 +430,35 @@ input:checked + .slider:before {
 /* =====================================================
    📱 スマホ専用スクロール
 ===================================================== */
-
 @media (max-width: 768px) {
-
     html,
     body {
         margin: 0;
         padding: 0;
-
         width: 100%;
         height: 100%;
-
         overflow: hidden;
-
         touch-action: pan-x pan-y;
     }
-
     body {
-
         display: flex;
         justify-content: center;
         align-items: flex-start;
     }
-
     #mobile-scroll-wrapper {
-
         width: max-content;
         min-width: 100%;
-
         min-height: 100%;
-
         overflow: auto;
-
         -webkit-overflow-scrolling: touch;
-
         overscroll-behavior: contain;
-
         padding: 12px;
         box-sizing: border-box;
     }
+}
+//map表示時だけcanvas のタッチ入力を無効化して縦横スクロールを有効にする
+.fullmap-scroll-mode #gameCanvas{
+    pointer-events:none;
 }
 </style>
 </head>
@@ -2061,6 +2051,11 @@ function handleButtonB() {
                 triggerPortaledge();
 			} else if (selected.name === MENU_ITEMS.MAP_FULL || selected.name === MENU_ITEMS.MAP_NORMAL) {
                 isFullMapMode = !isFullMapMode;
+                //map表示時だけcanvas のタッチ入力を無効化する→縦横スクロールが可能に
+                document.body.classList.toggle(
+				    'fullmap-scroll-mode',
+				    isFullMapMode
+				);
                 requestRedraw(); 
             }
         }
