@@ -701,7 +701,7 @@ const TIPS_MASTER = [
     { id: 2, label: "🪢\n縄", condition: "y6", text: "縄を使えば２～３マス離れた岩もつかめる！<br><br>(1)Aボタンで縄を構える。<br>(2)←→ボタンでつかみたい岩に狙いを定める。<br>(3)もう一度Aボタンで移動だ。<br>離れている岩ほど、体力を消耗するので注意しよう！", img: "./img/msg_rope.jpg" },
     { id: 3, label: "🌙\n夜", condition: "night", text: "もうすぐ寒く危険な夜になる！<br><br>夜は、通ってきた岩しか見えなくなる。<br>そして、１マス先の岩に移動するだけでも体力を消耗するぞ。", img: "./img/msg_time.jpg" },
     { id: 4, label: "♡\n回復", condition: "hp10", text: "体力の低下に気を付けよう！<br><br>アイテム欄にある帰還用パラグライダー「天幕傘」はハンモックにもなり、１回の登山で２回まで体力を回復できる。<br>(1)Bボタンでアイテム一覧を見る<br>(2)←→で「天幕傘 TentWing(2)」を選ぶ<br>(3)もう一度Bボタンで眠りに就ける", img: "./img/msg_hplaw.jpg" },
-    { id: 5, label: "🌄\n第2の山", condition: "mountain2", text: "第1の山の登頂おめでとう！<br><br>第2の山からは少しずつ崖が険しくなっていくぞ！", img: "" },
+    { id: 5, label: "🌄\n第2の山", condition: "mountain2", text: "第1の山の登頂おめでとう！<br><br>第2の山からはつかめる岩も減り、少しずつ崖が険しくなっていくぞ！<br><br>総合得点の表示も開始した！<br>詳細は「？」ボタンから確認できる。<br><br>最高記録はブックマークで保存もできるぞ。", img: "./img/msg_to_m2.jpg" },
     { id: 1001, label: "🏆\n山1", condition: "m1comp", text: "第1の山の登頂記念品", img: "./img/fde.png" },
     { id: 1002, label: "🏆\n山2", condition: "m2comp", text: "第2の山の登頂記念品", img: "" },
     { id: 1003, label: "🏆\n山3", condition: "m3comp", text: "第3の山の登頂記念品", img: "" },
@@ -752,19 +752,20 @@ bgmTitle.volume = 0.6;
 // 現在の通常BGM
 let currentBGM = null;
 // 移動SE
+// ※縄文座標の影響で上下逆転しているが許容とし、運用でカバー
 const moveSE = {
-    N:  new Audio('./bgm/arrow_n_1.mp3'),
-    NW: new Audio('./bgm/arrow_nw_2.mp3'),
-    NE: new Audio('./bgm/arrow_ne_4.mp3'),
+    S:  new Audio('./bgm/arrow_n_1.mp3'),
+    SW: new Audio('./bgm/arrow_nw_2.mp3'),
+    SE: new Audio('./bgm/arrow_ne_4.mp3'),
     W:  new Audio('./bgm/arrow_w_3.mp3'),
     E:  new Audio('./bgm/arrow_e_5.mp3'),
-    SW: new Audio('./bgm/arrow_sw_6.mp3'),
-    S:  new Audio('./bgm/arrow_s_d4.mp3'),
-    SE: new Audio('./bgm/arrow_se_7.mp3')
+    NW: new Audio('./bgm/arrow_sw_6.mp3'),
+    N:  new Audio('./bgm/arrow_s_d4.mp3'),
+    NE: new Audio('./bgm/arrow_se_d7.mp3')
 };
 // 移動SE音量（小さめ推奨）
 Object.values(moveSE).forEach(se => {
-    se.volume = 0.38;
+    se.volume = 0.4;
 });
 
 
@@ -2425,7 +2426,7 @@ function triggerPortaledge() {
                 }, 800);
             }, 1500);
         }, 800);
-    }, 1500);
+    }, 7000); //7秒眠る
 }
 
 // --- 📱 タッチ／クリック位置判定イベント ---
