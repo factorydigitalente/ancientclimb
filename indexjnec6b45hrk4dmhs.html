@@ -414,10 +414,66 @@ input:checked + .slider:before {
     transform: translateY(2px);
     box-shadow: 0 1px 0 #b38f00;
 }
+/* =====================================================
+   共通
+===================================================== */
+
+#mobile-scroll-wrapper {
+
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* =====================================================
+   📱 スマホ専用スクロール
+===================================================== */
+
+@media (max-width: 768px) {
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+
+        width: 100%;
+        height: 100%;
+
+        overflow: hidden;
+
+        touch-action: pan-x pan-y;
+    }
+
+    body {
+
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    #mobile-scroll-wrapper {
+
+        width: max-content;
+        min-width: 100%;
+
+        min-height: 100%;
+
+        overflow: auto;
+
+        -webkit-overflow-scrolling: touch;
+
+        overscroll-behavior: contain;
+
+        padding: 12px;
+        box-sizing: border-box;
+    }
+}
 </style>
 </head>
 <body>
-
+<div id="mobile-scroll-wrapper">
 <h1 class="logo">
     <img src="./img/logo.png" alt="縄文登山 Jomon Tozan - Ancient Climb -">
 </h1>
@@ -463,6 +519,7 @@ input:checked + .slider:before {
     </a>
     <p class="copyright">&copy;2026 Factory Digital Entertainment</p>
 </footer>
+</div><!-- mobile-scroll-wrapper終了 -->
 <script>
 // =========================================================================
 // 🧭 【開発規約・最重要】ゲーム内座標（縄文座標）の絶対ルール
